@@ -7,4 +7,4 @@ Disallow: /app
 Disallow: /doctor
 Disallow: /api/
 
-Sitemap: https://medo-shield-ai.vercel.app/sitemap.xml
+Sitemap: https://medoshield.pages.dev/sitemap.xml
