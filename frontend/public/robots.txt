@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /join/doctor
+Disallow: /app
+Disallow: /doctor
+Disallow: /api/
+
+Sitemap: https://medo-shield-ai.vercel.app/sitemap.xml

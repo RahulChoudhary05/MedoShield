@@ -1,0 +1,40 @@
+# Local full stack:  docker compose up --build   ->  http://localhost:8080
+services:
+  mongodb:
+    image: mongo:7.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-medo}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env}
+    volumes: [mongodb_data:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    # not published to the host on purpose
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      ENVIRONMENT: production
+      MONGODB_URL: mongodb://${MONGO_ROOT_USER:-medo}:${MONGO_ROOT_PASSWORD}@mongodb:27017/?authSource=admin
+      FRONTEND_URL: http://localhost:8080
+      ALLOWED_ORIGINS: http://localhost:8080
+      COOKIE_SECURE: "false"   # plain http locally; keep true behind TLS
+      PORT: "10000"
+    depends_on:
+      mongodb: { condition: service_healthy }
+    volumes: [uploads:/app/uploads]
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports: ["8080:8080"]
+    depends_on: [backend]
+
+volumes:
+  mongodb_data:
+  uploads:

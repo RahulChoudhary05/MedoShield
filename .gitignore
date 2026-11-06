@@ -1,0 +1,22 @@
+# deps & builds
+node_modules/
+dist/
+.tmp-build-*/
+# python
+__pycache__/
+*.pyc
+.venv/
+.vene/
+.pytest_cache/
+# secrets
+.env
+.env.*
+!.env.example
+!frontend/.env.development
+# runtime data
+backend/uploads/
+*.log
+.backup/
+.DS_Store
+
+.wrangler/

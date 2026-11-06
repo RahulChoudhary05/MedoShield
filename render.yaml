@@ -1,0 +1,52 @@
+# Render Blueprint — MedoShield API (free web service, Docker).
+# Dashboard → New → Blueprint → pick this repo. Values marked `sync: false` are entered in the dashboard.
+services:
+  - type: web
+    name: medoshield-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    region: singapore          # closest Render region to India; change if your users are elsewhere
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true      # Render creates a strong random key
+      - key: MONGODB_URL
+        sync: false              # Atlas connection string (mongodb+srv://...)
+      - key: MONGODB_DB
+        value: neuro_shield
+      # AI: Grok for text, Gemini for doctor-enabled video review
+      - key: LLM_PROVIDER
+        value: auto
+      - key: XAI_API_KEY
+        sync: false
+      - key: GROK_MODEL
+        value: grok-4.7
+      - key: GROK_REASONING_EFFORT
+        value: low
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      # Front end is served by Cloudflare Pages and calls the API through its same-origin /api proxy
+      - key: FRONTEND_URL
+        value: https://medoshield.pages.dev
+      - key: ALLOWED_ORIGINS
+        value: https://medoshield.pages.dev
+      - key: COOKIE_SAMESITE
+        value: lax
+      - key: PROXY_SHARED_SECRET
+        sync: false              # same random value as the Pages secret
+      - key: REQUIRE_PROXY_SECRET
+        value: "true"            # API only accepts traffic that came through Cloudflare (/health stays public)
+      - key: DB_HEARTBEAT_SECONDS
+        value: "240"
+      # Optional demo accounts for portfolio reviewers
+      - key: SEED_DEMO_DATA
+        value: "false"
+      - key: DEMO_PASSWORD
+        sync: false

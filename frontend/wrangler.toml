@@ -1,0 +1,11 @@
+# Cloudflare Pages project for the MedoShield front end.
+# Deploy:  npm run build  &&  npx wrangler pages deploy
+# (or connect the GitHub repo in the dashboard: root = frontend, build = npm run build, output = dist)
+name = "medoshield"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Your Render service URL (no trailing slash). PROXY_SHARED_SECRET is a *secret*:
+#   npx wrangler pages secret put PROXY_SHARED_SECRET
+BACKEND_URL = "https://medoshield-api.onrender.com"

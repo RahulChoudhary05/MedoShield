@@ -1,0 +1,10 @@
+# Deploy once:  cd deploy/keepalive && npx wrangler deploy
+name = "medoshield-keepalive"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+BACKEND_URL = "https://medoshield-api.onrender.com"
+
+[triggers]
+crons = ["*/10 * * * *"]

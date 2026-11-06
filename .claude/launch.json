@@ -1,0 +1,20 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "D:\\VS Code\\Working Codes\\Web Projects\\MEDO_SHIELD_AI\\backend\\.venv\\Scripts\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--port", "8000", "--app-dir", "D:\\VS Code\\Working Codes\\Web Projects\\MEDO_SHIELD_AI\\backend"],
+      "cwd": "D:\\VS Code\\Working Codes\\Web Projects\\MEDO_SHIELD_AI\\backend",
+      "env": { "MONGODB_URL": "", "ENVIRONMENT": "development", "DEBUG": "false" },
+      "port": 8000
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "D:\\VS Code\\Working Codes\\Web Projects\\MEDO_SHIELD_AI\\frontend",
+      "port": 5173
+    }
+  ]
+}
