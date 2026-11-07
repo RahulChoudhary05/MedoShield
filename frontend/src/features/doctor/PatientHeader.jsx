@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { motion } from 'framer-motion'
-import { AlertTriangle, ArrowLeft, Lock, LogOut, Mail, MessageSquare, Pill, Sparkles, Unlock } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Lock, LogOut, Mail, MessageSquare, Pill, Sparkles, Stethoscope, Unlock } from 'lucide-react'
 import { api } from '../../lib/api'
 import { errorMessage } from '../../lib/utils'
 import Button from '../../components/ui/Button'
@@ -45,66 +44,56 @@ export default function PatientHeader({ patient, latestRisk, patientId }) {
 
   const meds = patient.current_medications || []
   return (
-    <header className="card mb-6 overflow-hidden">
-      {/* Quiet tonal band with a faint trace line */}
-      <div className="card-tint-teal relative h-20 overflow-hidden border-b border-line/60 sm:h-24">
-        <svg aria-hidden viewBox="0 0 600 120" preserveAspectRatio="none" className="absolute inset-x-0 bottom-2 h-12 w-full text-teal-200">
-          <path d="M0 70 L120 70 L140 48 L160 92 L180 34 L200 80 L220 70 L380 70 L395 58 L410 84 L425 70 L600 70" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        </svg>
-        <Button variant="ghost" size="sm" icon={ArrowLeft} to="/doctor/patients" className="absolute left-2 top-2 sm:left-3">All patients</Button>
-      </div>
+    <header className="mb-6">
+      <Button variant="ghost" size="sm" icon={ArrowLeft} to="/doctor/patients" className="-ml-3 mb-4 h-11">All patients</Button>
 
-      <div className="relative card-pad pt-0 sm:pt-0">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="flex min-w-0 items-end gap-4">
-            <motion.div className="-mt-8 shrink-0 rounded-full bg-paper p-1 shadow-soft" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 22 }}>
-              <Avatar name={patient.full_name} size={80} />
-            </motion.div>
-            <div className="min-w-0 pt-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[1.75rem] font-semibold leading-tight sm:text-[2.1rem]">{patient.full_name}</h1>
-                <RiskBadge level={levelOf(latestRisk)} pulse />
-              </div>
-              <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-3">
-                <span>{patientMeta(patient) || 'Age and gender not shared'}</span>
-                {patient.email && (
-                  <a href={`mailto:${patient.email}`} className="inline-flex min-w-0 items-center gap-1 hover:text-teal-700">
-                    <Mail className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{patient.email}</span>
-                  </a>
-                )}
-              </p>
+      <div className="flex flex-col gap-5 border-b border-line pb-6 xl:flex-row xl:items-end xl:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <Avatar name={patient.full_name} size={64} className="text-[1.375rem]" />
+          <div className="min-w-0">
+            <p className="kicker">Patient chart</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="page-title">{patient.full_name}</h1>
+              <RiskBadge level={levelOf(latestRisk)} pulse />
             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" icon={MessageSquare} to={`/doctor/messages/${patientId}`}>Message</Button>
-            <Button variant="primary" size="sm" icon={Sparkles} onClick={() => setSummaryOpen(true)}>AI summary</Button>
-            <Button
-              variant={unlocked ? 'soft' : 'outline'}
-              size="sm"
-              icon={unlocked ? Unlock : Lock}
-              disabled={access.isLoading}
-              onClick={() => setVideoConfirm(true)}
-              aria-pressed={unlocked}
-              title={unlocked ? 'AI video review is enabled for this patient' : 'AI video review is locked'}
-            >
-              {access.isLoading ? 'Video review…' : unlocked ? 'Video review on' : 'Video review off'}
-            </Button>
-            <Button variant="ghost" size="sm" icon={LogOut} onClick={() => setEndConfirm(true)} className="text-rose-600 hover:bg-rose-50 hover:text-rose-600">End care</Button>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.9375rem] text-ink-3">
+              <span>{patientMeta(patient) || 'Age and gender not shared'}</span>
+              {patient.email && (
+                <a href={`mailto:${patient.email}`} className="inline-flex min-h-[44px] min-w-0 items-center gap-1.5 hover:text-teal-700 sm:min-h-0">
+                  <Mail aria-hidden className="h-4 w-4 shrink-0" strokeWidth={1.8} /> <span className="truncate">{patient.email}</span>
+                </a>
+              )}
+            </p>
           </div>
         </div>
 
-        <dl className="mt-5 grid gap-3 border-t border-line/70 pt-5 sm:grid-cols-3">
-          <TagGroup label="Conditions" items={patient.conditions} tone="teal" empty="None recorded" />
-          <TagGroup label="Allergies" items={patient.allergies} tone="teal" empty="No known allergies" icon={AlertTriangle} />
-          <TagGroup label="Self-reported medicines" items={meds} tone="ink" empty="None listed" icon={Pill} />
-        </dl>
-        {patient.medical_history && (
-          <p className="mt-4 rounded-2xl bg-cream px-4 py-3 text-sm text-ink-2 text-pretty">
-            <span className="font-medium text-ink">History · </span>{patient.medical_history}
-          </p>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" icon={Sparkles} onClick={() => setSummaryOpen(true)}>Write AI summary</Button>
+          <Button variant="outline" icon={MessageSquare} to={`/doctor/messages/${patientId}`}>Message</Button>
+          <Button
+            variant={unlocked ? 'soft' : 'outline'}
+            icon={unlocked ? Unlock : Lock}
+            disabled={access.isLoading}
+            onClick={() => setVideoConfirm(true)}
+            aria-pressed={unlocked}
+            title={unlocked ? 'AI video review is enabled for this patient' : 'AI video review is locked'}
+          >
+            {access.isLoading ? 'Video review…' : unlocked ? 'Video review on' : 'Video review off'}
+          </Button>
+          <Button variant="ghost" icon={LogOut} onClick={() => setEndConfirm(true)} className="text-rose-600 hover:bg-rose-50 hover:text-rose-600">End care</Button>
+        </div>
       </div>
+
+      <dl className="grid gap-5 border-b border-line py-5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-line">
+        <TagGroup label="Conditions" items={patient.conditions} tone="ink" empty="None recorded" icon={Stethoscope} className="sm:pr-5" />
+        <TagGroup label="Allergies" items={patient.allergies} tone="apricot" empty="No known allergies" icon={AlertTriangle} className="sm:px-5" />
+        <TagGroup label="Self-reported medicines" items={meds} tone="ink" empty="None listed" icon={Pill} className="sm:pl-5" />
+      </dl>
+      {patient.medical_history && (
+        <p className="max-w-[75ch] border-b border-line py-4 text-[0.9375rem] leading-relaxed text-ink-2 text-pretty">
+          <span className="kicker mr-2">History</span>{patient.medical_history}
+        </p>
+      )}
 
       <SummaryDialog open={summaryOpen} onOpenChange={setSummaryOpen} patientId={patientId} name={patient.full_name} />
 
@@ -136,14 +125,14 @@ export default function PatientHeader({ patient, latestRisk, patientId }) {
   )
 }
 
-function TagGroup({ label, items = [], tone, empty, icon: Icon }) {
+function TagGroup({ label, items = [], tone, empty, icon: Icon, className }) {
   return (
-    <div className="min-w-0">
-      <dt className="mb-1.5 flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[.12em] text-ink-4">
-        {Icon && <Icon className="h-3 w-3" />} {label}
+    <div className={className}>
+      <dt className="kicker mb-2 flex items-center gap-1.5">
+        {Icon && <Icon aria-hidden className="h-3.5 w-3.5" strokeWidth={1.8} />} {label}
       </dt>
       <dd className="flex flex-wrap gap-1.5">
-        {items.length ? items.map((x) => <Tag key={x} tone={tone}>{x}</Tag>) : <span className="text-sm text-ink-4">{empty}</span>}
+        {items?.length ? items.map((x) => <Tag key={x} tone={tone}>{x}</Tag>) : <span className="text-[0.9375rem] text-ink-3">{empty}</span>}
       </dd>
     </div>
   )

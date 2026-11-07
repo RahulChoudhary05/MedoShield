@@ -7,7 +7,8 @@ import { api } from '../../lib/api'
 import { useAuth } from '../../store/auth'
 import { cn, errorMessage } from '../../lib/utils'
 import Button from '../../components/ui/Button'
-import { Card, CardHeader } from '../../components/ui/Card'
+import { Card } from '../../components/ui/Card'
+import { Head } from './shared'
 import { Input, Textarea } from '../../components/ui/Field'
 
 const fromProfile = (p = {}) => ({
@@ -20,24 +21,27 @@ const fromProfile = (p = {}) => ({
 
 export function Switch({ checked, onChange, label, description, id }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-line/80 bg-cream/60 px-4 py-3.5">
+    <div className="flex items-start justify-between gap-4 rounded-xl border border-line bg-cream/40 px-4 py-3.5">
       <div className="min-w-0">
-        <label htmlFor={id} className="block cursor-pointer text-sm font-medium text-ink">{label}</label>
-        {description && <p className="mt-0.5 text-xs text-ink-3 text-pretty">{description}</p>}
+        <label htmlFor={id} className="block cursor-pointer text-[0.9375rem] font-medium text-ink">{label}</label>
+        {description && <p id={`${id}-desc`} className="mt-0.5 text-[0.875rem] text-ink-3 text-pretty">{description}</p>}
       </div>
       <button
         id={id}
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-describedby={description ? `${id}-desc` : undefined}
         onClick={() => onChange(!checked)}
-        className={cn('relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-300', checked ? 'bg-teal-500' : 'bg-line')}
+        className="group relative -my-2 -mr-1 grid h-11 w-14 shrink-0 place-items-center rounded-lg"
       >
-        <motion.span
-          className="absolute left-1 h-5 w-5 rounded-full bg-white shadow-soft"
-          animate={{ x: checked ? 20 : 0 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-        />
+        <span aria-hidden className={cn('relative inline-flex h-6 w-11 items-center rounded-full ring-1 ring-inset transition-colors duration-200', checked ? 'bg-teal-700 ring-teal-700' : 'bg-line ring-ink-4/30')}>
+          <motion.span
+            className="absolute left-0.5 h-5 w-5 rounded-full bg-paper shadow-soft"
+            animate={{ x: checked ? 20 : 0 }}
+            transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+          />
+        </span>
       </button>
     </div>
   )
@@ -86,7 +90,7 @@ export default function ProfileForm({ profile }) {
 
   return (
     <Card as="form" onSubmit={submit} noValidate>
-      <CardHeader icon={Building2} title="Practice details" subtitle="Shown to patients in the MedoShield directory" />
+      <Head icon={Building2} title="Practice details" subtitle="Shown to patients in the MedoShield directory" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Clinic or hospital" value={form.clinic_name} onChange={(e) => set('clinic_name', e.target.value)} maxLength={120} placeholder="e.g. Lakeside Neuro Clinic" error={errors.clinic_name} wrapClass="sm:col-span-2" />
         <Input label="Consultation fee (₹)" type="number" inputMode="decimal" min={0} max={100000} step="50" value={form.appointment_fee} onChange={(e) => set('appointment_fee', e.target.value)} error={errors.appointment_fee} />
@@ -113,8 +117,8 @@ export default function ProfileForm({ profile }) {
         </div>
       </div>
       <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-        {dirty && <Button type="button" variant="ghost" size="sm" onClick={() => { setForm(initial); setErrors({}) }}>Discard</Button>}
-        <Button type="submit" variant="primary" size="sm" icon={Save} loading={save.isPending} disabled={!dirty}>Save changes</Button>
+        {dirty && <Button type="button" variant="ghost" onClick={() => { setForm(initial); setErrors({}) }}>Discard changes</Button>}
+        <Button type="submit" variant="primary" icon={Save} loading={save.isPending} disabled={!dirty}>Save changes</Button>
       </div>
     </Card>
   )

@@ -1,17 +1,16 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowRight, BadgeCheck, Building2, IdCard, IndianRupee, Mail } from 'lucide-react'
 import { toast } from 'sonner'
-import AuthLayout from '../../features/auth/AuthLayout'
+import AuthShell, { AuthHeading } from '../../features/auth/AuthShell'
+import { FormError, PasswordChecklist, PasswordField, SelectField, TextField } from '../../features/auth/AuthFields'
 import Button from '../../components/ui/Button'
-import { Input, PasswordInput, PasswordStrength, Select } from '../../components/ui/Field'
-import { Notice } from '../../components/ui/Feedback'
 import { api } from '../../lib/api'
 import { useAuth } from '../../store/auth'
 import { errorMessage } from '../../lib/utils'
-import { useState } from 'react'
 
 const SPECIALTIES = ['Neurologist', 'Physiotherapist', 'General Practitioner', 'Cardiologist', 'Psychiatrist', 'Therapist', 'Orthopedist', 'Geriatrician', 'Endocrinologist', 'Physiatrist']
 
@@ -25,6 +24,15 @@ const schema = z.object({
   clinic_name: z.string().max(120).optional(),
   appointment_fee: z.coerce.number().min(0).max(100000).optional(),
 })
+
+function Group({ title, children }) {
+  return (
+    <fieldset className="space-y-5 border-t border-line pt-5">
+      <legend className="float-left mb-1 w-full font-mono text-[0.8125rem] text-ink-3">{title}</legend>
+      <div className="clear-left space-y-5">{children}</div>
+    </fieldset>
+  )
+}
 
 export default function DoctorJoin() {
   const [error, setError] = useState('')
@@ -45,34 +53,50 @@ export default function DoctorJoin() {
   }
 
   return (
-    <AuthLayout variant="doctor">
-      <h1 className="text-[2.4rem] font-semibold leading-tight tracking-tight">Join as a <span className="serif-accent text-teal-600">clinician</span></h1>
-      <p className="mt-2 text-ink-3">Monitor patients between visits with objective motion biomarkers.</p>
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4" noValidate>
-        <div className="grid grid-cols-2 gap-3">
-          <Input label="First name" error={errors.first_name?.message} {...register('first_name')} />
-          <Input label="Last name" error={errors.last_name?.message} {...register('last_name')} />
-        </div>
-        <Input label="Work email" type="email" icon={Mail} autoComplete="email" error={errors.email?.message} {...register('email')} />
+    <AuthShell variant="doctor">
+      <AuthHeading kicker="Clinician sign-up" lede="Monitor patients between visits with objective tremor, gait and balance measurements.">
+        Join as a <span className="serif-accent">clinician</span>
+      </AuthHeading>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-7" noValidate aria-busy={isSubmitting}>
+        <Group title="Your account">
+          <div className="grid grid-cols-1 gap-5 min-[400px]:grid-cols-2 min-[400px]:gap-3">
+            <TextField label="First name" autoComplete="given-name" error={errors.first_name?.message} {...register('first_name')} />
+            <TextField label="Last name" autoComplete="family-name" error={errors.last_name?.message} {...register('last_name')} />
+          </div>
+          <TextField label="Work email" type="email" inputMode="email" autoCapitalize="none" spellCheck={false} icon={Mail} autoComplete="email" error={errors.email?.message} {...register('email')} />
+          <PasswordField autoComplete="new-password" error={errors.password?.message} describedByExtra="doc-pw-rules" {...register('password')}>
+            <PasswordChecklist id="doc-pw-rules" value={watch('password') || ''} />
+          </PasswordField>
+        </Group>
+
+        <Group title="Your practice">
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <TextField label="Medical registration no." icon={IdCard} autoCapitalize="characters" spellCheck={false} placeholder="MCI-12345" error={errors.license_number?.message} {...register('license_number')} />
+            <SelectField label="Specialty" error={errors.specialty?.message} {...register('specialty')}>
+              {SPECIALTIES.map((s) => <option key={s}>{s}</option>)}
+            </SelectField>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+            <TextField label="Clinic / hospital" optional icon={Building2} autoComplete="organization" {...register('clinic_name')} />
+            <TextField label="Consultation fee" type="number" inputMode="numeric" min="0" icon={IndianRupee} error={errors.appointment_fee?.message} {...register('appointment_fee')} />
+          </div>
+          <p className="flex gap-3 rounded-xl border border-line bg-cream/60 px-4 py-3 text-[0.875rem] leading-relaxed text-ink-2">
+            <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" strokeWidth={1.8} aria-hidden="true" />
+            Your registration number is checked by our team before a “verified” badge appears to patients.
+          </p>
+        </Group>
+
+        <FormError>{error}</FormError>
         <div>
-          <PasswordInput autoComplete="new-password" error={errors.password?.message} {...register('password')} />
-          <PasswordStrength value={watch('password') || ''} />
+          <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} iconRight={ArrowRight}>Create clinician account</Button>
+          <p className="mt-3 text-[0.8125rem] leading-relaxed text-ink-3">
+            By creating an account you agree to the <Link to="/terms" className="link">terms</Link> and <Link to="/privacy" className="link">privacy policy</Link>.
+          </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input label="Medical registration no." icon={IdCard} placeholder="MCI-12345" error={errors.license_number?.message} {...register('license_number')} />
-          <Select label="Specialty" error={errors.specialty?.message} {...register('specialty')}>
-            {SPECIALTIES.map((s) => <option key={s}>{s}</option>)}
-          </Select>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input label="Clinic / hospital" optional icon={Building2} {...register('clinic_name')} />
-          <Input label="Consultation fee" type="number" min="0" icon={IndianRupee} error={errors.appointment_fee?.message} {...register('appointment_fee')} />
-        </div>
-        <Notice tone="lilac" icon={BadgeCheck}>Your registration number is verified by our team before a "verified" badge appears to patients.</Notice>
-        {error && <Notice tone="danger">{error}</Notice>}
-        <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} iconRight={ArrowRight}>Create clinician account</Button>
       </form>
-      <p className="mt-8 text-center text-sm text-ink-3">Already registered? <Link to="/login" className="font-semibold text-teal-700 hover:underline">Sign in</Link></p>
-    </AuthLayout>
+
+      <p className="mt-8 text-[0.9375rem] text-ink-3">Already registered? <Link to="/login" className="link font-medium">Sign in</Link></p>
+    </AuthShell>
   )
 }

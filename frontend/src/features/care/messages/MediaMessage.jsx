@@ -59,21 +59,21 @@ function VoicePlayer({ src, mine }) {
       <button
         onClick={toggle}
         aria-label={playing ? 'Pause voice note' : 'Play voice note'}
-        className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-full transition active:scale-95', mine ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-teal-700 text-white hover:brightness-110')}
+        className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full transition active:scale-[.97]', mine ? 'bg-paper/20 text-paper hover:bg-paper/30' : 'bg-teal-700 text-paper hover:bg-teal-800')}
       >
-        {playing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="ml-0.5 h-4 w-4" fill="currentColor" />}
+        {playing ? <Pause className="h-4 w-4" fill="currentColor" strokeWidth={1.8} /> : <Play className="ml-0.5 h-4 w-4" fill="currentColor" strokeWidth={1.8} />}
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex h-7 items-center gap-[2px]" aria-hidden>
           {bars.map((h, i) => (
             <span
               key={i}
-              className={cn('w-[3px] rounded-full transition-colors', i / bars.length < progress ? (mine ? 'bg-white' : 'bg-teal-500') : mine ? 'bg-white/35' : 'bg-ink/15')}
+              className={cn('w-[3px] rounded-full transition-colors', i / bars.length < progress ? (mine ? 'bg-paper' : 'bg-teal-700') : mine ? 'bg-paper/35' : 'bg-ink/15')}
               style={{ height: `${h * 100}%` }}
             />
           ))}
         </div>
-        <p className={cn('mt-0.5 text-[0.7rem] tabular-nums', mine ? 'text-white/70' : 'text-ink-4')}>
+        <p className={cn('mt-0.5 font-mono text-[0.8125rem] tabular-nums', mine ? 'text-paper/80' : 'text-ink-3')}>
           {playing || time > 0 ? fmt(time) : Number.isFinite(duration) ? fmt(duration) : 'Voice note'}
         </p>
       </div>
@@ -86,15 +86,15 @@ export default function MediaMessage({ m, mine }) {
 
   if (error) {
     return (
-      <p className={cn('flex items-center gap-1.5 text-sm', mine ? 'text-white/80' : 'text-ink-3')}>
-        <AlertCircle className="h-4 w-4" /> Attachment unavailable
+      <p className={cn('flex items-center gap-1.5 text-[0.9375rem]', mine ? 'text-paper/80' : 'text-ink-3')}>
+        <AlertCircle className="h-4 w-4" strokeWidth={1.8} /> Attachment unavailable
       </p>
     )
   }
   if (!src) {
     return (
-      <p className={cn('flex items-center gap-2 text-sm', mine ? 'text-white/80' : 'text-ink-3')}>
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading {m.msg_type === 'voice' ? 'voice note' : 'attachment'}…
+      <p className={cn('flex items-center gap-2 text-[0.9375rem]', mine ? 'text-paper/80' : 'text-ink-3')}>
+        <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> Loading {m.msg_type === 'voice' ? 'voice note' : 'attachment'}…
       </p>
     )
   }
@@ -111,18 +111,18 @@ export default function MediaMessage({ m, mine }) {
       )}
       <div className="flex items-center gap-3">
         {!isImage && (
-          <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl', mine ? 'bg-white/15' : 'bg-rose-50 text-rose-500')}>
-            <FileText className="h-5 w-5" />
+          <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-lg', mine ? 'bg-paper/15' : 'bg-cream text-teal-700')}>
+            <FileText className="h-5 w-5" strokeWidth={1.8} aria-hidden />
           </span>
         )}
-        <p className="min-w-0 flex-1 truncate text-sm font-medium" title={name}>{name}</p>
+        <p className="min-w-0 flex-1 truncate text-[0.9375rem] font-medium" title={name}>{name}</p>
         <a
           href={src}
           download={name}
           aria-label={`Download ${name}`}
-          className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full transition', mine ? 'bg-white/15 hover:bg-white/25' : 'bg-cream text-ink-2 hover:bg-line')}
+          className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-lg transition', mine ? 'bg-paper/15 hover:bg-paper/25' : 'bg-cream text-ink-2 hover:bg-line')}
         >
-          <Download className="h-4 w-4" />
+          <Download className="h-4 w-4" strokeWidth={1.8} />
         </a>
       </div>
     </div>

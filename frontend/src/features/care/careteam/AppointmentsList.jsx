@@ -11,11 +11,11 @@ import { ConfirmDialog } from '../shared'
 import { MODES } from './RequestDialog'
 
 const STATUS = {
-  pending: { label: 'Awaiting reply', cls: 'bg-apricot-50 text-apricot-600 ring-apricot-100', bar: 'bg-apricot-300' },
-  accepted: { label: 'Accepted', cls: 'bg-teal-50 text-teal-700 ring-teal-100', bar: 'bg-teal-500' },
-  rejected: { label: 'Declined', cls: 'bg-rose-50 text-rose-600 ring-rose-100', bar: 'bg-rose-200' },
-  cancelled: { label: 'Cancelled', cls: 'bg-ink/[.05] text-ink-3 ring-line', bar: 'bg-line' },
-  completed: { label: 'Completed', cls: 'bg-teal-50 text-teal-600 ring-teal-100', bar: 'bg-teal-300' },
+  pending: { label: 'Awaiting reply', cls: 'text-apricot-600', dot: 'bg-apricot-500' },
+  accepted: { label: 'Accepted', cls: 'text-teal-700', dot: 'bg-teal-600' },
+  rejected: { label: 'Declined', cls: 'text-rose-600', dot: 'bg-rose-500' },
+  cancelled: { label: 'Cancelled', cls: 'text-ink-3', dot: 'bg-ink-4' },
+  completed: { label: 'Completed', cls: 'text-teal-700', dot: 'bg-teal-400' },
 }
 
 function to12(t) {
@@ -39,7 +39,7 @@ export default function AppointmentsList({ items }) {
 
   return (
     <>
-      <ul className="space-y-3">
+      <ul className="card divide-y divide-line px-5 sm:px-6">
         <AnimatePresence initial={false}>
           {items.map((a, i) => {
             const st = STATUS[a.status] || STATUS.pending
@@ -47,42 +47,41 @@ export default function AppointmentsList({ items }) {
             const d = a.doctor
             const canCancel = a.status === 'pending' || a.status === 'accepted'
             return (
-              <motion.li key={a.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 6) * 0.04 }} className="card relative overflow-hidden">
-                <span aria-hidden className={cn('absolute inset-y-0 left-0 w-1.5', st.bar)} />
-                <div className="flex flex-col gap-4 p-5 pl-6 sm:flex-row sm:items-start">
+              <motion.li key={a.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 6) * 0.04, duration: 0.35 }}>
+                <div className="flex flex-col gap-4 py-5 sm:flex-row sm:items-start">
                   <div className="flex min-w-0 flex-1 gap-3.5">
-                    <Avatar name={d?.full_name || 'Doctor'} size={48} />
+                    <Avatar name={d?.full_name || 'Doctor'} size={44} />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate font-semibold text-ink">{d?.full_name || 'Doctor no longer available'}</p>
-                        <span className={cn('badge ring-1 ring-inset', st.cls)}>{st.label}</span>
+                        <span className={cn('inline-flex items-center gap-1.5 font-mono text-[0.8125rem]', st.cls)}><span className={cn('h-1.5 w-1.5 rounded-full', st.dot)} aria-hidden />{st.label}</span>
                       </div>
-                      {d?.specialty && <p className="mt-0.5 flex items-center gap-1 text-sm text-ink-3"><Stethoscope className="h-3.5 w-3.5" /> {d.specialty}</p>}
-                      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-ink-2">
-                        <span className="inline-flex items-center gap-1.5"><CalendarClock className="h-4 w-4 text-ink-4" /> {fmtDate(a.preferred_date, 'EEE, d MMM yyyy')} · {to12(a.preferred_time)}</span>
-                        <span className="inline-flex items-center gap-1.5"><mode.icon className="h-4 w-4 text-ink-4" /> {mode.label}</span>
+                      {d?.specialty && <p className="mt-0.5 flex items-center gap-1 text-[0.9375rem] text-ink-3"><Stethoscope className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden /> {d.specialty}</p>}
+                      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[0.9375rem] text-ink-2">
+                        <span className="inline-flex items-center gap-1.5"><CalendarClock className="h-4 w-4 text-ink-3" strokeWidth={1.8} aria-hidden /> <span className="num">{fmtDate(a.preferred_date, 'EEE, d MMM yyyy')} · {to12(a.preferred_time)}</span></span>
+                        <span className="inline-flex items-center gap-1.5"><mode.icon className="h-4 w-4 text-ink-3" strokeWidth={1.8} aria-hidden /> {mode.label}</span>
                         {Number(a.appointment_fee) > 0 && <span className="num text-ink-3">₹{Number(a.appointment_fee).toLocaleString('en-IN')}</span>}
                       </div>
-                      {a.message && <p className="mt-2.5 line-clamp-2 text-sm text-ink-3">“{a.message}”</p>}
+                      {a.message && <p className="mt-2.5 line-clamp-2 text-[0.9375rem] text-ink-3">“{a.message}”</p>}
                       {a.doctor_note && (
-                        <div className="mt-3 flex gap-2 rounded-2xl bg-cream px-3.5 py-2.5 text-sm text-ink-2 ring-1 ring-inset ring-line/60">
-                          <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-500" />
+                        <div className="mt-3 flex gap-2 border-l-2 border-teal-700 pl-3 text-[0.9375rem] text-ink-2">
+                          <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-700" strokeWidth={1.8} aria-hidden />
                           <span><span className="font-medium text-ink">Note from your doctor: </span>{a.doctor_note}</span>
                         </div>
                       )}
-                      <p className="mt-2 text-xs text-ink-4">Requested {fmtRelative(a.created_at)}</p>
+                      <p className="mt-2 font-mono text-[0.8125rem] text-ink-3">Requested {fmtRelative(a.created_at)}</p>
                     </div>
                   </div>
                   {(canCancel || a.status === 'accepted') && (
                     <div className="flex shrink-0 gap-2 sm:flex-col sm:items-stretch">
                       {a.status === 'accepted' && d?.id && (
-                        <Link to={`/app/messages/${d.id}`} className="btn btn-sm btn-brand flex-1 sm:flex-none">
-                          <MessageCircle className="h-4 w-4" /> Message
+                        <Link to={`/app/messages/${d.id}`} className="btn btn-md btn-brand flex-1 sm:flex-none">
+                          <MessageCircle className="h-4 w-4" strokeWidth={1.8} aria-hidden /> Message doctor
                         </Link>
                       )}
                       {canCancel && (
-                        <button onClick={() => setCancelling(a)} className="btn btn-sm btn-ghost flex-1 text-rose-600 hover:bg-rose-50 hover:text-rose-600 sm:flex-none">
-                          <XCircle className="h-4 w-4" /> Cancel
+                        <button onClick={() => setCancelling(a)} className="btn btn-md btn-ghost flex-1 text-rose-600 hover:bg-rose-50 hover:text-rose-600 sm:flex-none">
+                          <XCircle className="h-4 w-4" strokeWidth={1.8} aria-hidden /> Cancel visit
                         </button>
                       )}
                     </div>
@@ -93,8 +92,8 @@ export default function AppointmentsList({ items }) {
           })}
         </AnimatePresence>
       </ul>
-      <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-ink-4">
-        <MessagesSquare className="h-3.5 w-3.5" /> Secure messaging opens as soon as a doctor accepts your request.
+      <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[0.8125rem] text-ink-3">
+        <MessagesSquare className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden /> Secure messaging opens as soon as a doctor accepts your request.
       </p>
       <ConfirmDialog
         open={!!cancelling}
@@ -105,7 +104,7 @@ export default function AppointmentsList({ items }) {
         loading={cancel.isPending}
         onConfirm={() => cancel.mutate(cancelling.id)}
       >
-        <p className="text-sm text-ink-3">You can always send a new request later.</p>
+        <p className="text-[0.9375rem] text-ink-3">You can always send a new request later.</p>
       </ConfirmDialog>
     </>
   )

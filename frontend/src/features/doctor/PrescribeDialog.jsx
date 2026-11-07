@@ -106,37 +106,38 @@ export default function PrescribeDialog({ open, onOpenChange, patientId, patient
       description={`Adds to ${patientName}’s plan and reminders. They’ll be notified straight away.`}
       footer={
         <>
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} disabled={add.isPending}>Cancel</Button>
-          <Button variant="brand" size="sm" type="submit" form="prescribe-form" loading={add.isPending}>{replaces ? 'Replace prescription' : 'Add to plan'}</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={add.isPending}>Cancel</Button>
+          <Button variant="brand" type="submit" form="prescribe-form" loading={add.isPending}>{replaces ? 'Replace prescription' : 'Add to plan'}</Button>
         </>
       }
     >
       <form id="prescribe-form" onSubmit={submit} className="grid gap-4 sm:grid-cols-2" noValidate>
         <Input label="Medicine" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Levodopa/Carbidopa" maxLength={80} error={errors.name} autoFocus wrapClass="sm:col-span-2" />
         {replaces && (
-          <Notice tone="warn" className="border-apricot-100 bg-apricot-50 text-apricot-600 sm:col-span-2">A medicine with this name is already in the plan — saving will replace it.</Notice>
+          <Notice tone="warn" className="sm:col-span-2">A medicine with this name is already in the plan — saving will replace it.</Notice>
         )}
         <Input label="Dosage" optional value={form.dosage} onChange={(e) => set('dosage', e.target.value)} placeholder="e.g. 100/25 mg, 1 tablet" maxLength={60} error={errors.dosage} />
         <Select label="Frequency" value={form.frequency} onChange={(e) => changeFrequency(e.target.value)}>
           {FREQUENCIES.map((f) => <option key={f.value} value={f.value}>{f.value[0].toUpperCase() + f.value.slice(1)}</option>)}
         </Select>
 
-        <Field label="Reminder times" help={form.time_slots.length ? '24-hour clock. Up to 8 times a day.' : 'No reminders — the server will pick a default time.'} className="sm:col-span-2">
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-cream/60 p-2.5">
+        <Field label="Reminder times" descId="rx-slots-desc" help={form.time_slots.length ? '24-hour clock. Up to 8 times a day.' : 'No reminders — the server will pick a default time.'} className="sm:col-span-2">
+          <div role="group" aria-label="Reminder times" aria-describedby="rx-slots-desc" className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-cream/50 p-2">
             <AnimatePresence initial={false}>
               {form.time_slots.map((s) => (
                 <motion.span
                   key={s}
                   layout
-                  initial={{ opacity: 0, scale: 0.8 }}
+                  initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-paper py-1 pl-3 pr-1 text-sm font-medium text-ink shadow-soft ring-1 ring-line"
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                  className="inline-flex h-11 items-center gap-1.5 rounded-lg bg-paper pl-3 text-[0.9375rem] text-ink ring-1 ring-inset ring-line"
                 >
-                  <Clock3 className="h-3.5 w-3.5 text-teal-600" />
+                  <Clock3 aria-hidden strokeWidth={1.8} className="h-4 w-4 text-teal-700" />
                   <span className="num">{s}</span>
-                  <button type="button" onClick={() => removeSlot(s)} aria-label={`Remove ${s}`} className="grid h-6 w-6 place-items-center rounded-full text-ink-4 transition hover:bg-rose-50 hover:text-rose-500">
-                    <X className="h-3 w-3" />
+                  <button type="button" onClick={() => removeSlot(s)} aria-label={`Remove ${s}`} className="grid h-11 w-10 place-items-center rounded-r-lg text-ink-3 transition-colors duration-150 hover:bg-rose-50 hover:text-rose-600">
+                    <X aria-hidden strokeWidth={1.8} className="h-4 w-4" />
                   </button>
                 </motion.span>
               ))}
@@ -149,9 +150,9 @@ export default function PrescribeDialog({ open, onOpenChange, patientId, patient
                   onChange={(e) => setNewSlot(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSlot() } }}
                   aria-label="New reminder time"
-                  className="h-8 rounded-full border border-line bg-paper px-3 text-sm text-ink focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                  className="h-11 rounded-lg border border-line bg-paper px-3 text-[0.9375rem] text-ink focus:border-teal-500 focus:outline-none focus:ring-[3px] focus:ring-teal-100"
                 />
-                <Button type="button" size="sm" variant="soft" icon={Plus} className="h-8 px-3" onClick={addSlot} disabled={!TIME_RE.test(newSlot)}>Add</Button>
+                <Button type="button" variant="soft" icon={Plus} className="h-11 px-3.5" onClick={addSlot} disabled={!TIME_RE.test(newSlot)}>Add time</Button>
               </span>
             )}
           </div>

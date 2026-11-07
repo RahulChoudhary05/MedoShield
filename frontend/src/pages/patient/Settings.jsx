@@ -3,12 +3,12 @@ import { Bell, HeartHandshake, Lock, ShieldCheck, Stethoscope, UserRound } from 
 import { api } from '../../lib/api'
 import { fmtDate } from '../../lib/utils'
 import { useAuth } from '../../store/auth'
-import { Avatar, PageHeader } from '../../components/ui/Data'
-import { ErrorState, Skeleton } from '../../components/ui/Feedback'
-import { Stagger, StaggerItem } from '../../components/ui/motion'
+import { Avatar } from '../../components/ui/Data'
+import { PageHeader, Stagger, StaggerItem } from '../../components/ui/motion'
 import { EmergencyForm, HealthForm, ProfileForm } from '../../features/care/settings/ProfileForms'
 import Security from '../../features/care/settings/Security'
 import Privacy, { NotificationsCard } from '../../features/care/settings/Privacy'
+import { InlineError } from '../../features/care/kit'
 
 const SECTIONS = [
   { id: 'profile', label: 'Profile', icon: UserRound },
@@ -20,7 +20,9 @@ const SECTIONS = [
 ]
 
 function jump(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const el = document.getElementById(id)
+  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  el?.focus?.({ preventScroll: true })
 }
 
 export default function Settings() {
@@ -30,21 +32,26 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader eyebrow="Account" title="Settings &" accent="privacy" subtitle="Keep your details current so your care team — and Medo — can look after you well." />
+      <PageHeader
+        kicker="Settings"
+        title="Settings and"
+        accent="privacy"
+        description="Keep your details current so your care team — and Medo — can look after you well."
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-8">
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="card mb-4 hidden items-center gap-3 p-4 lg:flex">
-            <Avatar name={user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`} size={44} />
+          <div className="mb-4 hidden items-center gap-3 border-b border-line pb-4 lg:flex">
+            <Avatar name={user?.full_name || `${user?.first_name || ''} ${user?.last_name || ''}`} size={40} />
             <div className="min-w-0">
-              <p className="truncate font-semibold">{user?.full_name || user?.first_name || 'You'}</p>
-              <p className="truncate text-xs text-ink-4">Member since {fmtDate(user?.created_at, 'MMM yyyy')}</p>
+              <p className="truncate font-medium text-ink">{user?.full_name || user?.first_name || 'You'}</p>
+              <p className="truncate font-mono text-[0.8125rem] text-ink-3">Member since {fmtDate(user?.created_at, 'MMM yyyy')}</p>
             </div>
           </div>
           <nav aria-label="Settings sections" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:px-0 lg:flex-col lg:gap-0.5">
             {SECTIONS.map((s) => (
-              <button key={s.id} onClick={() => jump(s.id)} className="inline-flex shrink-0 items-center gap-2.5 rounded-full border border-line bg-paper px-3.5 py-2 text-sm font-medium text-ink-2 transition hover:bg-cream lg:rounded-2xl lg:border-transparent lg:bg-transparent lg:hover:bg-paper lg:hover:shadow-soft">
-                <s.icon className="h-4 w-4 text-ink-4" /> {s.label}
+              <button key={s.id} onClick={() => jump(s.id)} className="inline-flex min-h-[44px] shrink-0 items-center gap-2.5 rounded-lg border border-line bg-paper px-3.5 text-[0.9375rem] text-ink-2 transition-colors duration-150 hover:bg-cream lg:border-transparent lg:bg-transparent lg:hover:bg-ink/[.04]">
+                <s.icon className="h-4 w-4 text-ink-3" strokeWidth={1.8} aria-hidden /> {s.label}
               </button>
             ))}
           </nav>
@@ -52,11 +59,11 @@ export default function Settings() {
 
         <div className="min-w-0">
           {me.isError ? (
-            <ErrorState error={me.error} onRetry={me.refetch} />
+            <InlineError error={me.error} onRetry={me.refetch} />
           ) : me.isLoading || !data ? (
-            <div className="space-y-6">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-72 rounded-3xl" />)}</div>
+            <div className="space-y-5" aria-busy="true" aria-label="Loading settings">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-72 rounded-3xl" />)}</div>
           ) : (
-            <Stagger className="space-y-6">
+            <Stagger className="space-y-5">
               <StaggerItem><ProfileForm me={data} /></StaggerItem>
               <StaggerItem><HealthForm me={data} /></StaggerItem>
               <StaggerItem><EmergencyForm me={data} /></StaggerItem>

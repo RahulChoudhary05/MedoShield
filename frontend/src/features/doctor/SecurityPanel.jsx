@@ -7,11 +7,11 @@ import { api } from '../../lib/api'
 import { useAuth } from '../../store/auth'
 import { errorMessage, fmtRelative } from '../../lib/utils'
 import Button from '../../components/ui/Button'
-import { Card, CardHeader } from '../../components/ui/Card'
+import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { PasswordInput, PasswordStrength } from '../../components/ui/Field'
 import { ErrorState, Skeleton } from '../../components/ui/Feedback'
-import { ConfirmDialog } from './shared'
+import { ConfirmDialog, Head } from './shared'
 
 function describeAgent(ua = '') {
   const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Browser'
@@ -48,7 +48,7 @@ export function ChangePassword() {
 
   return (
     <Card as="form" onSubmit={submit} noValidate>
-      <CardHeader icon={KeyRound} tone="teal" title="Change password" subtitle="Signs out every other device" />
+      <Head icon={KeyRound} title="Change password" subtitle="Signs out every other device" />
       <div className="space-y-4">
         <PasswordInput label="Current password" autoComplete="current-password" value={form.current} onChange={set('current')} error={errors.current} />
         <div>
@@ -58,7 +58,7 @@ export function ChangePassword() {
         <PasswordInput label="Confirm new password" autoComplete="new-password" value={form.confirm} onChange={set('confirm')} error={errors.confirm} />
       </div>
       <div className="mt-5 flex justify-end">
-        <Button type="submit" size="sm" variant="primary" loading={change.isPending} disabled={!form.current || !form.next}>Update password</Button>
+        <Button type="submit" variant="primary" loading={change.isPending} disabled={!form.current || !form.next}>Update password</Button>
       </div>
     </Card>
   )
@@ -82,32 +82,32 @@ export function Sessions() {
   const sessions = q.data?.sessions ?? []
   return (
     <Card>
-      <CardHeader icon={ShieldCheck} tone="teal" title="Active sessions" subtitle="Devices currently signed in to your account" />
+      <Head icon={ShieldCheck} title="Active sessions" subtitle="Devices currently signed in to your account" />
       {q.isLoading ? (
-        <div className="space-y-2.5">{[0, 1].map((i) => <Skeleton key={i} className="h-14 rounded-2xl" />)}</div>
+        <div className="space-y-2.5">{[0, 1].map((i) => <Skeleton key={i} className="h-14" />)}</div>
       ) : q.isError ? (
         <ErrorState error={q.error} onRetry={() => q.refetch()} className="py-6" />
       ) : (
-        <ul className="space-y-2">
+        <ul className="divide-y divide-line border-y border-line">
           {sessions.map((s, i) => {
             const d = describeAgent(s.user_agent)
             const Icon = d.mobile ? Smartphone : Monitor
             return (
-              <li key={`${s.created_at}-${i}`} className="flex items-center gap-3 rounded-2xl border border-line/70 bg-cream/60 px-3.5 py-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-paper text-ink-2 ring-1 ring-line"><Icon className="h-4 w-4" /></span>
+              <li key={`${s.created_at}-${i}`} className="flex items-center gap-3 py-3">
+                <Icon aria-hidden strokeWidth={1.8} className="h-5 w-5 shrink-0 text-ink-3" />
                 <div className="min-w-0 flex-1">
-                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">{d.label}{s.current && <Badge tone="teal" dot>This device</Badge>}</p>
-                  <p className="truncate text-xs text-ink-3">{s.ip || 'Unknown IP'} · signed in {fmtRelative(s.created_at)}</p>
+                  <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] font-medium text-ink">{d.label}{s.current && <Badge tone="teal" dot>This device</Badge>}</p>
+                  <p className="truncate font-mono text-[0.8125rem] text-ink-3">{s.ip || 'Unknown IP'} · signed in {fmtRelative(s.created_at)}</p>
                 </div>
               </li>
             )
           })}
-          {!sessions.length && <li className="text-sm text-ink-4">No active sessions found.</li>}
+          {!sessions.length && <li className="py-3 text-[0.9375rem] text-ink-3">No active sessions found.</li>}
         </ul>
       )}
-      <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-line bg-cream p-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-ink-2">Lost a device or shared a computer? End every session, including this one.</p>
-        <Button variant="danger" size="sm" icon={LogOut} onClick={() => setConfirm(true)} className="shrink-0">Sign out everywhere</Button>
+      <div className="mt-5 flex flex-col gap-3 rounded-xl border border-rose-100 bg-rose-50/50 p-4">
+        <p className="text-[0.9375rem] text-ink-2">Lost a device or shared a computer? End every session, including this one.</p>
+        <Button variant="danger" icon={LogOut} onClick={() => setConfirm(true)} className="self-start">Sign out everywhere</Button>
       </div>
       <ConfirmDialog
         open={confirm}

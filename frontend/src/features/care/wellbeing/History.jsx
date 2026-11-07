@@ -1,14 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
-import { Footprints, Gauge, HeartPulse, Loader2, Moon, Scale, Trash2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 import { api } from '../../../lib/api'
 import { errorMessage, fmtDate } from '../../../lib/utils'
 
-function Pill({ icon: Icon, children, cls }) {
+function Val({ label, value, unit }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${cls}`}>
-      <Icon className="h-3 w-3" /> {children}
+    <span className="inline-flex items-baseline gap-1">
+      <span className="font-mono text-[0.8125rem] text-ink-3">{label}</span>
+      <span className="num text-ink">{value}</span>
+      {unit && <span className="font-mono text-[0.8125rem] text-ink-3">{unit}</span>}
     </span>
   )
 }
@@ -25,28 +27,28 @@ export default function History({ records }) {
   })
 
   return (
-    <ul className="divide-y divide-line/70">
+    <ul className="-my-1 divide-y divide-line">
       <AnimatePresence initial={false}>
         {records.map((r) => {
           const busy = del.isPending && del.variables === r.id
           return (
-            <motion.li key={r.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }} className="flex items-start gap-3 py-3.5 sm:items-center">
-              <div className="w-14 shrink-0 text-center">
-                <p className="num text-xl font-semibold leading-none text-ink">{fmtDate(r.date, 'd')}</p>
-                <p className="mt-0.5 text-[0.7rem] uppercase tracking-wider text-ink-4">{fmtDate(r.date, 'MMM')}</p>
+            <motion.li key={r.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }} className="flex items-start gap-4 py-3.5">
+              <div className="w-12 shrink-0">
+                <p className="num text-[1.25rem] leading-none text-ink">{fmtDate(r.date, 'd')}</p>
+                <p className="mt-1 font-mono text-[0.8125rem] text-ink-3">{fmtDate(r.date, 'MMM')}</p>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap gap-1.5">
-                  {r.sleep_hours != null && <Pill icon={Moon} cls="bg-cream text-ink-2 ring-1 ring-inset ring-line/70">{r.sleep_hours} h</Pill>}
-                  {r.stress_level != null && <Pill icon={Gauge} cls="bg-cream text-ink-2 ring-1 ring-inset ring-line/70">Stress {r.stress_level}/10</Pill>}
-                  {r.walking_distance != null && <Pill icon={Footprints} cls="bg-cream text-ink-2 ring-1 ring-inset ring-line/70">{r.walking_distance} km</Pill>}
-                  {r.heart_rate != null && <Pill icon={HeartPulse} cls="bg-cream text-ink-2 ring-1 ring-inset ring-line/70">{r.heart_rate} bpm</Pill>}
-                  {r.weight_kg != null && <Pill icon={Scale} cls="bg-cream text-ink-2 ring-1 ring-inset ring-line/70">{r.weight_kg} kg{r.bmi ? ` · BMI ${r.bmi}` : ''}</Pill>}
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {r.sleep_hours != null && <Val label="Sleep" value={r.sleep_hours} unit="h" />}
+                  {r.stress_level != null && <Val label="Stress" value={r.stress_level} unit="/10" />}
+                  {r.walking_distance != null && <Val label="Walk" value={r.walking_distance} unit="km" />}
+                  {r.heart_rate != null && <Val label="HR" value={r.heart_rate} unit="bpm" />}
+                  {r.weight_kg != null && <Val label="Weight" value={r.weight_kg} unit={`kg${r.bmi ? ` · BMI ${r.bmi}` : ''}`} />}
                 </div>
-                {r.notes && <p className="mt-1.5 line-clamp-2 text-sm text-ink-3">{r.notes}</p>}
+                {r.notes && <p className="mt-1.5 line-clamp-2 text-[0.9375rem] text-ink-3">{r.notes}</p>}
               </div>
-              <button onClick={() => del.mutate(r.id)} disabled={busy} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-4 transition hover:bg-rose-50 hover:text-rose-500" aria-label={`Delete log for ${fmtDate(r.date)}`}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              <button onClick={() => del.mutate(r.id)} disabled={busy} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-ink-3 transition hover:bg-rose-50 hover:text-rose-500" aria-label={`Delete log for ${fmtDate(r.date)}`}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Trash2 className="h-4 w-4" strokeWidth={1.8} />}
               </button>
             </motion.li>
           )

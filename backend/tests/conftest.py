@@ -6,6 +6,7 @@ os.environ.update({
     "MONGODB_URL": "",
     "GEMINI_API_KEY": "",
     "XAI_API_KEY": "",
+    "GROQ_API_KEY": "",
     "LLM_PROVIDER": "auto",
     "SECRET_KEY": "test-secret-key-0123456789-abcdefghijklmnop",
     "SEED_DEMO_DATA": "false",

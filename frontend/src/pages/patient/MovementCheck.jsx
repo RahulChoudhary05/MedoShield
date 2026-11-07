@@ -1,20 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  ArrowLeft, ArrowRight, Bot, Camera, Check, CircleStop, LineChart, Play, RotateCcw, ShieldCheck, Lightbulb,
+  ArrowLeft, ArrowRight, Bot, Camera, Check, CircleStop, Lightbulb, LineChart, Play, RotateCcw, ShieldCheck, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Button from '../../components/ui/Button'
-import { PageHeader } from '../../components/ui/Data'
-import { ErrorState, Notice } from '../../components/ui/Feedback'
+import { PageHeader } from '../../components/ui/motion'
 import MovementResult from '../../components/charts/MovementResult'
 import { api } from '../../lib/api'
 import { cn, sleep } from '../../lib/utils'
 import { usePoseCapture } from '../../features/pose/usePoseCapture'
 import CameraStage, { QualityMeters } from '../../features/monitoring/CameraStage'
-import { AnalysingSequence, CheckHistory, Stepper, TaskPicker } from '../../features/monitoring/movement'
-import { TONE_SOFT, taskOf } from '../../features/monitoring/shared'
+import { AnalysingSequence, CheckHistory, PoseFigure, Stepper, TaskPicker } from '../../features/monitoring/movement'
+import { taskOf } from '../../features/monitoring/shared'
+import { InlineError } from '../../features/care/kit'
 
 const SETUP = [
   { key: 'light', label: 'Bright, even light', hint: 'Face a window or lamp rather than having it behind you.' },
@@ -24,9 +25,17 @@ const SETUP = [
 ]
 
 const pane = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.2, 0.7, 0.2, 1] } },
-  exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.2, 0.8, 0.2, 1] } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
+}
+
+function Tick({ on, dashed }) {
+  return (
+    <span className={cn('mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border transition-colors duration-150', on ? 'border-teal-700 bg-teal-700 text-paper' : dashed ? 'border-dashed border-ink-4' : 'border-ink-4/60 bg-paper')} aria-hidden>
+      {on && <Check className="h-3 w-3" strokeWidth={3} />}
+    </span>
+  )
 }
 
 export default function MovementCheck() {
@@ -104,31 +113,34 @@ export default function MovementCheck() {
   const ready = cap.phase === 'ready'
   const canStart = ready && cap.live.detected
   const busy = cap.phase === 'countdown' || cap.phase === 'recording'
+  const stepProgress = step === 'capture' && cap.phase === 'recording' ? cap.progress : step === 'capture' && ready ? 0.08 : undefined
+  const liveHint = ready && !cap.live.detected ? 'Step into view — the button unlocks when we can see you.'
+    : ready && !cap.live.inFrame ? 'Almost there — try to fit your whole body in the frame.'
+      : cap.phase === 'recording' ? 'Keep going at your own pace.'
+        : ready ? 'Looking good. Press start when you’re ready.' : ''
 
   return (
-    <div className="space-y-6">
+    <div>
       <div ref={topRef} className="scroll-mt-24" />
       <PageHeader
-        eyebrow="Movement check"
+        kicker="Movement check · on-device"
         title="A quick, private"
         accent="movement check"
-        subtitle="Under a minute, using your camera. We track 33 points on your body to measure walking, balance and tremor."
+        description="Under a minute, using your camera. We track 33 points on your body to measure walking, balance and tremor in the 4–12 Hz band."
       />
 
-      <Stepper step={step} />
+      <Stepper step={step} seconds={meta.seconds} progress={stepProgress} />
 
       <AnimatePresence mode="wait">
         {step === 'task' && (
           <motion.section key="task" {...pane} aria-labelledby="task-title" className="space-y-5">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <h2 id="task-title" className="text-xl font-semibold">What would you like to check?</h2>
-                <p className="text-sm text-ink-3">Pick one. You can do the others afterwards.</p>
-              </div>
+            <div>
+              <h2 id="task-title" className="text-[1.25rem] font-semibold">What would you like to check?</h2>
+              <p className="text-[0.9375rem] text-ink-3">Pick one. You can do the others afterwards.</p>
             </div>
             <TaskPicker value={task} onChange={setTask} />
-            <div className="flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
-              <p className="flex items-center gap-2 text-sm text-ink-3"><ShieldCheck className="h-4 w-4 shrink-0 text-teal-500" /> Video stays on this device. Only keypoints are analysed.</p>
+            <div className="flex flex-col-reverse items-stretch justify-between gap-4 border-t border-line pt-5 sm:flex-row sm:items-center">
+              <p className="flex items-center gap-2 text-[0.9375rem] text-ink-3"><ShieldCheck className="h-4 w-4 shrink-0 text-teal-700" strokeWidth={1.8} aria-hidden /> Video stays on this device. Only keypoints are analysed.</p>
               <Button variant="brand" size="lg" iconRight={ArrowRight} onClick={() => setStep('capture')}>Continue with {meta.label.toLowerCase()}</Button>
             </div>
           </motion.section>
@@ -136,78 +148,79 @@ export default function MovementCheck() {
 
         {step === 'capture' && (
           <motion.section key="capture" {...pane} aria-label="Record your movement" className="space-y-4">
-            <Notice tone="success" icon={ShieldCheck} title="Your video never leaves this device">
-              The pose model runs in your browser. Only 33 body keypoints per frame are sent for analysis — no images, no recordings.
-            </Notice>
-
             <AnimatePresence>
               {guidance && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                  <Notice tone="warn" icon={Lightbulb} title={guidance.title} action={<button onClick={() => setGuidance(null)} className="text-xs font-semibold underline underline-offset-2">Dismiss</button>}>
-                    <ul className="mt-1 list-disc space-y-0.5 pl-4">{guidance.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
-                  </Notice>
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div role="alert" className="flex items-start gap-3 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[#6E5716]">
+                    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.8} aria-hidden />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">{guidance.title}</p>
+                      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[0.9375rem]">{guidance.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+                    </div>
+                    <button onClick={() => setGuidance(null)} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg hover:bg-butter-100" aria-label="Dismiss guidance">
+                      <X className="h-4 w-4" strokeWidth={1.8} />
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+              {/* Camera is the hero */}
               <div className="min-w-0 space-y-3">
-                <div className={cn('rounded-[1.95rem] p-[3px] transition-all duration-500',
-                  cap.phase === 'recording' ? 'bg-apricot-300' : ['ready', 'countdown'].includes(cap.phase) ? 'bg-teal-300' : 'bg-line')}>
-                  <CameraStage cap={cap} durationSec={meta.seconds} onOpen={cap.open} className="border-0"
-                    idleText="When you turn it on, a skeleton outline will follow your movement so you know you’re in view." />
+                <div className={cn('rounded-[1.15rem] p-[2px] transition-colors duration-500',
+                  cap.phase === 'recording' ? 'bg-apricot-500' : ['ready', 'countdown'].includes(cap.phase) ? 'bg-teal-600' : 'bg-transparent')}>
+                  <CameraStage cap={cap} durationSec={meta.seconds} onOpen={cap.open}
+                    idleText="When you turn it on, a skeleton outline follows your movement so you know you’re in view." />
                 </div>
                 <QualityMeters live={cap.live} phase={cap.phase} />
+                <p className="flex items-start gap-2 text-[0.9375rem] text-ink-3">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" strokeWidth={1.8} aria-hidden />
+                  The pose model runs in your browser. Only 33 keypoints per frame are sent — no images, no recordings.
+                </p>
               </div>
 
-              <div className="card card-pad flex min-w-0 flex-col">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-2xl', TONE_SOFT[meta.tone])}><meta.icon className="h-5 w-5" /></span>
-                    <div className="min-w-0">
-                      <p className="truncate font-display text-lg font-semibold">{meta.label}</p>
-                      <p className="text-xs text-ink-3">About {meta.seconds} seconds</p>
-                    </div>
+              <div className="card flex min-w-0 flex-col p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="kicker">Task · about {meta.seconds} s</p>
+                    <p className="mt-1 font-serif text-[1.75rem] leading-none text-ink">{meta.label}</p>
                   </div>
-                  <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={goTask} disabled={busy}>Change</Button>
+                  <Button variant="ghost" icon={ArrowLeft} onClick={goTask} disabled={busy}>Change</Button>
                 </div>
 
-                <ol className="mt-4 space-y-2.5">
+                <ol className="mt-5 divide-y divide-line border-y border-line">
                   {meta.how.map((h, i) => (
-                    <li key={i} className="flex gap-3 text-sm text-ink-2">
-                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-teal-50 text-[0.7rem] font-bold text-teal-700">{i + 1}</span>
+                    <li key={i} className="flex gap-3 py-2.5 text-[0.9375rem] text-ink-2">
+                      <span className="num w-5 shrink-0 text-ink-3">{String(i + 1).padStart(2, '0')}</span>
                       {h}
                     </li>
                   ))}
                 </ol>
 
-                <fieldset className="mt-5 border-t border-line/70 pt-4">
-                  <legend className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-ink-4">Quick setup</legend>
-                  <ul className="space-y-1">
+                <fieldset className="mt-5">
+                  <legend className="kicker mb-2">Quick setup</legend>
+                  <ul>
                     {SETUP.map((s) => {
                       const on = !!ticks[s.key]
                       return (
                         <li key={s.key}>
-                          <label className="flex cursor-pointer items-start gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-cream">
-                            <input type="checkbox" className="peer sr-only" checked={on} onChange={() => setTicks((t) => ({ ...t, [s.key]: !t[s.key] }))} />
-                            <span className={cn('mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-teal-300', on ? 'border-teal-500 bg-teal-500 text-white' : 'border-line bg-paper')}>
-                              {on && <Check className="h-3 w-3" strokeWidth={3.5} />}
-                            </span>
+                          <label className="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-cream/70 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-teal-600">
+                            <input type="checkbox" className="sr-only" checked={on} onChange={() => setTicks((t) => ({ ...t, [s.key]: !t[s.key] }))} />
+                            <Tick on={on} />
                             <span className="min-w-0">
-                              <span className={cn('block text-sm font-medium', on ? 'text-ink-3 line-through decoration-ink-4/50' : 'text-ink')}>{s.label}</span>
-                              <span className="block text-xs text-ink-4">{s.hint}</span>
+                              <span className={cn('block text-[0.9375rem] font-medium', on ? 'text-ink-3 line-through decoration-ink-4/50' : 'text-ink')}>{s.label}</span>
+                              <span className="block text-[0.8125rem] text-ink-3">{s.hint}</span>
                             </span>
                           </label>
                         </li>
                       )
                     })}
-                    <li className="flex items-start gap-3 px-2 py-1.5">
-                      <span className={cn('mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition-colors', cap.live.inFrame && ready ? 'border-teal-500 bg-teal-500 text-white' : 'border-dashed border-line')}>
-                        {cap.live.inFrame && ready && <Check className="h-3 w-3" strokeWidth={3.5} />}
-                      </span>
+                    <li className="flex items-start gap-3 px-2 py-2">
+                      <Tick on={cap.live.inFrame && ready} dashed />
                       <span>
-                        <span className="block text-sm font-medium text-ink">Body in frame</span>
-                        <span className="block text-xs text-ink-4">Ticks itself when we can see you clearly.</span>
+                        <span className="block text-[0.9375rem] font-medium text-ink">Body in frame</span>
+                        <span className="block text-[0.8125rem] text-ink-3">Ticks itself when we can see you clearly.</span>
                       </span>
                     </li>
                   </ul>
@@ -225,12 +238,7 @@ export default function MovementCheck() {
                       {cap.phase === 'loading' ? 'Starting camera…' : cap.phase === 'error' ? 'Try the camera again' : 'Turn on camera'}
                     </Button>
                   )}
-                  <p className="mt-2 min-h-[1rem] text-center text-xs text-ink-4" aria-live="polite">
-                    {ready && !cap.live.detected ? 'Step into view — the button unlocks when we can see you.'
-                      : ready && !cap.live.inFrame ? 'Almost there — try to fit your whole body in the frame.'
-                        : cap.phase === 'recording' ? 'Keep going at your own pace.'
-                          : ready ? 'Looking good. Press start when you’re ready.' : ''}
-                  </p>
+                  <p className="mt-2 min-h-[1.25rem] text-center text-[0.8125rem] text-ink-3" aria-live="polite">{liveHint}</p>
                 </div>
               </div>
             </div>
@@ -240,11 +248,11 @@ export default function MovementCheck() {
         {step === 'analyse' && (
           <motion.section key="analyse" {...pane} aria-label="Analysing">
             {submit.isError && submit.error?.response?.status !== 422 ? (
-              <div className="card card-pad">
-                <ErrorState error={submit.error} />
-                <p className="mt-4 text-center text-sm text-ink-3">Your keypoints are still on this page — nothing was lost, so you can simply try again.</p>
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  <Button variant="brand" icon={RotateCcw} onClick={() => submit.mutate(frames)}>Try sending again</Button>
+              <div className="card p-5 sm:p-6">
+                <InlineError error={submit.error} fallback="We couldn’t send your keypoints for analysis." />
+                <p className="mt-4 text-[0.9375rem] text-ink-3">Your keypoints are still on this page — nothing was lost, so you can simply try again.</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button variant="brand" icon={RotateCcw} onClick={() => submit.mutate(frames)}>Send keypoints again</Button>
                   <Button variant="outline" onClick={() => { submit.reset(); cap.reset(); setStep('capture') }}>Record again</Button>
                 </div>
               </div>
@@ -256,23 +264,21 @@ export default function MovementCheck() {
 
         {step === 'result' && result && (
           <motion.section key="result" {...pane} aria-labelledby="result-title" className="space-y-5">
-            <div className="card card-tint-teal relative overflow-hidden p-6 sm:p-8">
-              <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl icon-tile icon-teal"><meta.icon className="h-7 w-7" /></span>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[.16em] text-teal-700">{meta.label} · just now · saved</p>
-                    <h2 id="result-title" className="mt-1 text-[1.75rem] font-semibold leading-tight sm:text-[2.1rem]">Here’s what we <span className="serif-accent">noticed</span></h2>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="primary" icon={RotateCcw} onClick={restart}>Do another check</Button>
-                  <Button variant="outline" icon={Bot} to="/app/assistant">Ask Medo about this</Button>
-                  <Button variant="ghost" icon={LineChart} to="/app">View trend</Button>
-                </div>
+            <p className="sr-only" role="status" aria-live="polite">
+              Results ready. Motor index {Math.round(result.motor_index?.overall ?? 0)} out of 100.
+            </p>
+            <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="kicker">{meta.label} · saved just now</p>
+                <h2 id="result-title" className="mt-1 font-serif text-[2rem] leading-tight text-ink">Here’s what we <span className="italic text-teal-700">measured</span></h2>
+                <Link to="/app" className="link mt-2 inline-flex min-h-[44px] items-center gap-1.5 text-[0.9375rem]"><LineChart className="h-4 w-4" strokeWidth={1.8} aria-hidden /> View your trend</Link>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="primary" icon={RotateCcw} onClick={restart}>Do another check</Button>
+                <Button variant="outline" icon={Bot} to="/app/assistant">Ask Medo about this</Button>
               </div>
             </div>
-            <MovementResult result={result} />
+            <MovementResult result={result} figure={<PoseFigure task={task} active />} />
           </motion.section>
         )}
       </AnimatePresence>

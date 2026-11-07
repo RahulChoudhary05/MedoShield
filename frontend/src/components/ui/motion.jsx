@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { animate, motion, useInView, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
-const EASE = [0.2, 0.7, 0.2, 1]
+const EASE = [0.2, 0.8, 0.2, 1]
 
 /** Fade/slide in when scrolled into view. */
-export function Reveal({ children, delay = 0, y = 18, className, as = 'div', once = true }) {
+export function Reveal({ children, delay = 0, y = 14, className, as = 'div', once = true }) {
   const M = motion[as] || motion.div
   return (
-    <M className={className} initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once, margin: '-60px' }} transition={{ duration: 0.65, delay, ease: EASE }}>
+    <M className={className} initial={{ opacity: 0, y, filter: 'blur(6px)' }} whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }} viewport={{ once, margin: '-60px' }} transition={{ duration: 0.6, delay, ease: EASE }}>
       {children}
     </M>
   )
@@ -24,7 +24,7 @@ export function Stagger({ children, className, delay = 0, gap = 0.06 }) {
 }
 export function StaggerItem({ children, className }) {
   return (
-    <motion.div className={className} variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}>
+    <motion.div className={className} variants={{ hidden: { opacity: 0, y: 12, filter: 'blur(5px)' }, show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.55, ease: EASE } } }}>
       {children}
     </motion.div>
   )
@@ -47,76 +47,49 @@ export function CountUp({ value, decimals = 0, duration = 1.2, className, suffix
   )
 }
 
-/** 3D tilt-on-hover card with a moving specular highlight. */
-export function TiltCard({ children, className, max = 8, glare = true }) {
-  const ref = useRef(null)
-  const mx = useMotionValue(0.5)
-  const my = useMotionValue(0.5)
-  const rx = useSpring(useTransform(my, [0, 1], [max, -max]), { stiffness: 220, damping: 20 })
-  const ry = useSpring(useTransform(mx, [0, 1], [-max, max]), { stiffness: 220, damping: 20 })
-  const gx = useTransform(mx, (v) => `${v * 100}%`)
-  const gy = useTransform(my, (v) => `${v * 100}%`)
-  const glareBg = useTransform([gx, gy], ([x, y]) => `radial-gradient(420px circle at ${x} ${y}, rgba(255,255,255,.55), transparent 45%)`)
-  function onMove(e) {
-    const r = ref.current.getBoundingClientRect()
-    mx.set((e.clientX - r.left) / r.width)
-    my.set((e.clientY - r.top) / r.height)
-  }
-  function reset() {
-    mx.set(0.5)
-    my.set(0.5)
-  }
+/** Card hover: a quiet 2px lift (no tilt, no glare — calmer for a health product). */
+export function TiltCard({ children, className }) {
+  return <div className={cn('relative transition-transform duration-200 ease-out hover:-translate-y-0.5', className)}>{children}</div>
+}
+
+/** Formerly a magnetic CTA wrapper; now a plain inline wrapper (buttons handle their own hover). */
+export function Magnetic({ children, className }) {
+  return <div className={cn('inline-block', className)}>{children}</div>
+}
+
+/** Retired: the Field Notes system has no decorative blobs. Kept so old imports still compile. */
+export function Blobs() {
+  return null
+}
+
+/** Headline that rises in word by word. */
+export function WordsReveal({ text, className, delay = 0 }) {
+  const words = String(text).split(' ')
   return (
-    <motion.div ref={ref} onMouseMove={onMove} onMouseLeave={reset} style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }} className={cn('relative [transform-style:preserve-3d]', className)}>
-      {children}
-      {glare && (
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 [.group:hover_&]:opacity-100"
-          style={{ background: glareBg }}
-        />
-      )}
-    </motion.div>
+    <span className={className} aria-label={text}>
+      {words.map((w, i) => (
+        <span key={i} aria-hidden className="inline-block overflow-hidden pb-[0.1em] align-bottom">
+          <motion.span className="inline-block" initial={{ y: '105%', opacity: 0, filter: 'blur(8px)' }} animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.85, delay: delay + i * 0.05, ease: EASE }}>
+            {w}{i < words.length - 1 ? ' ' : ''}
+          </motion.span>
+        </span>
+      ))}
+    </span>
   )
 }
 
-/** Magnetic hover wrapper for CTAs. */
-export function Magnetic({ children, strength = 0.25, className }) {
-  const ref = useRef(null)
-  const x = useSpring(0, { stiffness: 260, damping: 18 })
-  const y = useSpring(0, { stiffness: 260, damping: 18 })
+/** Section/page heading block used across the app: mono kicker, serif title, muted lede, actions. */
+export function PageHeader({ kicker, title, accent, description, actions, className }) {
   return (
-    <motion.div
-      ref={ref}
-      className={cn('inline-block', className)}
-      style={{ x, y }}
-      onMouseMove={(e) => {
-        const r = ref.current.getBoundingClientRect()
-        x.set((e.clientX - r.left - r.width / 2) * strength)
-        y.set((e.clientY - r.top - r.height / 2) * strength)
-      }}
-      onMouseLeave={() => {
-        x.set(0)
-        y.set(0)
-      }}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-/** Soft animated gradient blobs for section backgrounds. */
-export function Blobs({ className, variant = 'warm' }) {
-  const sets = {
-    warm: ['bg-teal-100/60', 'bg-apricot-100/50', 'bg-cream'],
-    cool: ['bg-teal-100/50', 'bg-cream', 'bg-teal-50'],
-    sunny: ['bg-butter-100/60', 'bg-apricot-50', 'bg-teal-50'],
-  }[variant]
-  return (
-    <div aria-hidden className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}>
-      <div className={cn('absolute -left-24 -top-24 h-[28rem] w-[28rem] animate-blob rounded-full blur-3xl', sets[0])} />
-      <div className={cn('absolute -right-20 top-10 h-[24rem] w-[24rem] animate-blob rounded-full blur-3xl [animation-delay:-6s]', sets[1])} />
-      <div className={cn('absolute bottom-[-8rem] left-1/3 h-[26rem] w-[26rem] animate-blob rounded-full blur-3xl [animation-delay:-12s]', sets[2])} />
-    </div>
+    <header className={cn('mb-8 flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between', className)}>
+      <div className="min-w-0">
+        {kicker && <p className="kicker">{kicker}</p>}
+        <h1 className="page-title mt-2">
+          {title}{accent && <> <span className="italic text-teal-700">{accent}</span></>}
+        </h1>
+        {description && <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-ink-3">{description}</p>}
+      </div>
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+    </header>
   )
 }

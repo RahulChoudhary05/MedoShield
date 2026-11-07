@@ -2,16 +2,16 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Activity, ArrowUpDown, ChevronRight, HeartPulse, Lock, MessageSquare, Search, SearchX, ShieldAlert, Unlock, Users } from 'lucide-react'
+import { ArrowUpDown, ChevronRight, Lock, MessageSquare, Search, SearchX, Unlock, Users } from 'lucide-react'
 import { api } from '../../lib/api'
 import { cn, fmtRelative } from '../../lib/utils'
 import Button from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { RiskBadge } from '../../components/ui/Badge'
-import { Avatar, PageHeader } from '../../components/ui/Data'
+import { RiskBadge, RISK_HEX, riskKey } from '../../components/ui/Badge'
+import { Avatar, MicroBars, PageHeader } from '../../components/ui/Data'
 import { EmptyState, ErrorState, Skeleton } from '../../components/ui/Feedback'
 import Segmented from '../../components/ui/Segmented'
-import { MiniBar, Tag, Th, levelOf, motorOf, patientMeta } from '../../features/doctor/shared'
+import { MiniBar, Tag, Th, levelOf, motorOf, patientMeta, subscoresOf } from '../../features/doctor/shared'
 
 const FILTERS = [
   { value: 'ALL', label: 'All' },
@@ -27,6 +27,12 @@ const SORTS = {
   recent: { label: 'Last check', fn: (a, b) => new Date(b.latest_risk?.created_at || 0) - new Date(a.latest_risk?.created_at || 0) },
   name: { label: 'Name', fn: (a, b) => (a.full_name || '').localeCompare(b.full_name || '') },
 }
+const SUMMARY = [
+  { key: 'ALL', label: 'On your panel' },
+  { key: 'HIGH', label: 'Needs review' },
+  { key: 'MEDIUM', label: 'Watch closely' },
+  { key: 'LOW', label: 'Steady' },
+]
 
 export default function Patients() {
   const navigate = useNavigate()
@@ -58,41 +64,43 @@ export default function Patients() {
   return (
     <div>
       <PageHeader
-        eyebrow="Your panel"
+        kicker="Your panel"
         title="My"
         accent="patients"
-        subtitle="Everyone under your care, triaged by their latest movement check. Select a patient to open their chart."
+        description="Everyone under your care, triaged by their latest movement check. Select a patient to open their chart."
       />
 
       {patients.length > 0 && (
-        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { key: 'ALL', label: 'On your panel', icon: Users },
-            { key: 'HIGH', label: 'Needs review', icon: ShieldAlert, dot: 'bg-risk-high' },
-            { key: 'MEDIUM', label: 'Watch closely', icon: Activity, dot: 'bg-risk-medium' },
-            { key: 'LOW', label: 'Steady', icon: HeartPulse, dot: 'bg-risk-low' },
-          ].map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setFilter(s.key)}
-              aria-pressed={filter === s.key}
-              className={cn('card card-interactive flex items-center gap-3 p-4 text-left', filter === s.key && 'border-teal-300 ring-1 ring-teal-200')}
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-cream text-ink-3"><s.icon className="h-[18px] w-[18px]" /></span>
-              <span className="min-w-0">
-                <span className="num block text-2xl font-semibold leading-none text-ink">{counts[s.key] || 0}</span>
-                <span className="mt-1 flex items-center gap-1.5 truncate text-xs font-medium text-ink-3">
-                  {s.dot && <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', s.dot)} />}{s.label}
+        <div className="card mb-6 grid grid-cols-2 overflow-hidden sm:grid-cols-4">
+          {SUMMARY.map((s, i) => {
+            const active = filter === s.key
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setFilter(s.key)}
+                aria-pressed={active}
+                className={cn(
+                  'relative min-h-[44px] border-line px-5 py-4 text-left transition-colors duration-150 hover:bg-cream/50',
+                  ['border-b border-r sm:border-b-0', 'border-b sm:border-b-0 sm:border-r', 'border-r', ''][i],
+                  active && 'bg-cream/60',
+                )}
+              >
+                {active && <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-teal-700" />}
+                <span className="kicker flex items-center gap-1.5">
+                  {s.key !== 'ALL' && <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: RISK_HEX[s.key] }} />}
+                  {s.label}
                 </span>
-              </span>
-            </button>
-          ))}
+                <span className="num mt-1.5 block text-[1.75rem] leading-none text-ink">{counts[s.key] || 0}</span>
+              </button>
+            )
+          })}
         </div>
       )}
 
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Segmented
+          aria-label="Filter by risk"
           value={filter}
           onChange={setFilter}
           size="sm"
@@ -100,20 +108,20 @@ export default function Patients() {
         />
         <div className="flex gap-2">
           <div className="relative min-w-0 flex-1 lg:w-72">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-4" />
+            <Search aria-hidden strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-4" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search name, email or condition"
               aria-label="Search patients"
-              className="input h-10 rounded-full pl-10 text-sm"
+              className="input pl-10"
             />
           </div>
           <label className="relative shrink-0">
             <span className="sr-only">Sort patients</span>
-            <ArrowUpDown className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-4" />
-            <select value={sort} onChange={(e) => setSort(e.target.value)} className="input h-10 w-[9.5rem] rounded-full pl-9 text-sm">
+            <ArrowUpDown aria-hidden strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-4" />
+            <select value={sort} onChange={(e) => setSort(e.target.value)} className="input w-[9.5rem] pl-10">
               {Object.entries(SORTS).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
             </select>
           </label>
@@ -121,7 +129,7 @@ export default function Patients() {
       </div>
 
       {isLoading ? (
-        <Card><div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}</div></Card>
+        <Card><div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div></Card>
       ) : isError ? (
         <ErrorState error={error} onRetry={refetch} />
       ) : patients.length === 0 ? (
@@ -129,18 +137,18 @@ export default function Patients() {
           <EmptyState
             icon={Users}
             title="No patients yet"
-            text="Patients join your panel when you accept their appointment request. Pending requests are waiting in Appointments."
-            action={<Button variant="brand" size="sm" to="/doctor/appointments">Review requests</Button>}
+            text="Patients join your panel when you accept their appointment request."
+            action={<Button variant="brand" to="/doctor/appointments">Review requests</Button>}
           />
         </Card>
       ) : rows.length === 0 ? (
         <Card>
           <EmptyState
             icon={SearchX}
-            tone="apricot"
+            tone="ink"
             title="No matches"
             text="Nobody on your panel matches that search and filter."
-            action={<Button variant="outline" size="sm" onClick={() => { setQuery(''); setFilter('ALL') }}>Clear filters</Button>}
+            action={<Button variant="outline" onClick={() => { setQuery(''); setFilter('ALL') }}>Clear filters</Button>}
           />
         </Card>
       ) : (
@@ -148,19 +156,21 @@ export default function Patients() {
           {/* Desktop table */}
           <Card pad={false} className="hidden overflow-hidden md:block">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[880px] text-sm">
-                <thead className="border-b border-line/70 bg-cream/70">
+              <table className="w-full min-w-[960px] text-[0.9375rem]">
+                <caption className="sr-only">Patients on your panel, {rows.length} shown, sorted by {SORTS[sort].label.toLowerCase()}</caption>
+                <thead className="border-b border-line">
                   <tr>
                     <Th className="pl-6">Patient</Th>
                     <Th>Conditions</Th>
                     <Th>Latest risk</Th>
                     <Th>Motor index</Th>
+                    <Th>Profile</Th>
                     <Th>Last check</Th>
                     <Th>Video review</Th>
                     <Th className="pr-6 text-right">Messages</Th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line/60">
+                <tbody className="divide-y divide-line">
                   <AnimatePresence initial={false}>
                     {rows.map((p) => {
                       const level = levelOf(p.latest_risk)
@@ -171,30 +181,32 @@ export default function Patients() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
                           onClick={() => open(p.id)}
-                          className="group cursor-pointer transition-colors hover:bg-cream/80"
+                          className="group cursor-pointer transition-colors duration-150 hover:bg-cream/50"
                         >
-                          <td className="py-3.5 pl-6 pr-3">
+                          <td className="py-3 pl-6 pr-3">
                             <div className="flex items-center gap-3">
-                              <Avatar name={p.full_name} size={38} />
+                              <Avatar name={p.full_name} size={36} />
                               <div className="min-w-0">
                                 <Link
                                   to={`/doctor/patients/${p.id}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="block truncate font-semibold text-ink group-hover:text-teal-700"
+                                  className="block truncate font-medium text-ink underline-offset-4 group-hover:underline"
                                 >
                                   {p.full_name}
                                 </Link>
-                                <p className="truncate text-xs text-ink-3">{patientMeta(p) || '—'}</p>
+                                <p className="truncate text-[0.8125rem] text-ink-3">{patientMeta(p) || '—'}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-3 py-3.5"><Conditions list={p.conditions} /></td>
-                          <td className="px-3 py-3.5"><RiskBadge level={level} pulse /></td>
-                          <td className="px-3 py-3.5"><MiniBar value={motorOf(p.latest_risk)} level={level} /></td>
-                          <td className="whitespace-nowrap px-3 py-3.5 text-ink-2">{p.latest_risk?.created_at ? fmtRelative(p.latest_risk.created_at) : <span className="text-ink-4">Never</span>}</td>
-                          <td className="px-3 py-3.5"><VideoState unlocked={p.video_unlocked} /></td>
-                          <td className="py-3.5 pl-3 pr-6 text-right"><Unread n={p.unread_messages} /></td>
+                          <td className="px-3 py-3"><Conditions list={p.conditions} /></td>
+                          <td className="px-3 py-3"><RiskBadge level={level} pulse short /></td>
+                          <td className="px-3 py-3"><MiniBar value={motorOf(p.latest_risk)} level={level} /></td>
+                          <td className="px-3 py-3"><Profile p={p} level={level} /></td>
+                          <td className="whitespace-nowrap px-3 py-3 text-ink-2">{p.latest_risk?.created_at ? fmtRelative(p.latest_risk.created_at) : <span className="text-ink-3">Never</span>}</td>
+                          <td className="px-3 py-3"><VideoState unlocked={p.video_unlocked} /></td>
+                          <td className="py-3 pl-3 pr-6 text-right"><Unread n={p.unread_messages} /></td>
                         </motion.tr>
                       )
                     })}
@@ -210,64 +222,86 @@ export default function Patients() {
               const level = levelOf(p.latest_risk)
               return (
                 <li key={p.id}>
-                  <Link to={`/doctor/patients/${p.id}`} className="card card-interactive block p-4 active:scale-[.99]">
+                  <Link to={`/doctor/patients/${p.id}`} className="card block p-4 transition-colors duration-150 active:bg-cream/50">
                     <div className="flex items-center gap-3">
-                      <Avatar name={p.full_name} size={44} />
+                      <Avatar name={p.full_name} size={40} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">{p.full_name}</p>
-                        <p className="truncate text-xs text-ink-3">{patientMeta(p) || '—'}</p>
+                        <p className="truncate font-medium text-ink">{p.full_name}</p>
+                        <p className="truncate text-[0.8125rem] text-ink-3">{patientMeta(p) || '—'}</p>
                       </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-ink-4" />
+                      <RiskBadge level={level} pulse short />
+                      <ChevronRight aria-hidden strokeWidth={1.8} className="h-4 w-4 shrink-0 text-ink-4" />
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <RiskBadge level={level} pulse />
-                      <VideoState unlocked={p.video_unlocked} />
-                      <Unread n={p.unread_messages} />
-                    </div>
-                    <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-cream px-3 py-2.5">
+                    <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-3">
                       <div>
-                        <p className="text-[0.65rem] font-medium uppercase tracking-[.12em] text-ink-4">Motor index</p>
-                        <MiniBar value={motorOf(p.latest_risk)} level={level} />
+                        <dt className="kicker">Motor</dt>
+                        <dd className="mt-1"><MiniBar value={motorOf(p.latest_risk)} level={level} /></dd>
                       </div>
-                      <p className="text-right text-xs text-ink-3">Last check<br /><span className="font-medium text-ink-2">{p.latest_risk?.created_at ? fmtRelative(p.latest_risk.created_at) : 'Never'}</span></p>
+                      <div>
+                        <dt className="kicker">Profile</dt>
+                        <dd className="mt-1.5"><Profile p={p} level={level} width={60} /></dd>
+                      </div>
+                      <div className="text-right">
+                        <dt className="kicker">Last check</dt>
+                        <dd className="mt-1 text-[0.875rem] text-ink-2">{p.latest_risk?.created_at ? fmtRelative(p.latest_risk.created_at) : 'Never'}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <VideoState unlocked={p.video_unlocked} />
+                      {p.unread_messages > 0 && <Unread n={p.unread_messages} />}
+                      {(p.conditions || []).length > 0 && <Conditions list={p.conditions} max={2} />}
                     </div>
-                    {(p.conditions || []).length > 0 && <div className="mt-3"><Conditions list={p.conditions} max={3} /></div>}
                   </Link>
                 </li>
               )
             })}
           </ul>
-          <p className="mt-4 text-center text-xs text-ink-4">Showing {rows.length} of {patients.length} patients</p>
+          <p className="mt-4 text-center font-mono text-[0.8125rem] text-ink-3" aria-live="polite">Showing {rows.length} of {patients.length} patients</p>
         </>
       )}
     </div>
   )
 }
 
+/** Biomarker profile micro-chart from the latest check's sub-scores (tremor → cadence). */
+function Profile({ p, level, width = 72 }) {
+  const values = subscoresOf(p.latest_risk)
+  const k = riskKey(level)
+  return (
+    <MicroBars
+      values={values}
+      width={width}
+      color={k === 'UNKNOWN' || k === 'CALIBRATING' ? RISK_HEX.CALIBRATING : RISK_HEX[k]}
+      label={values.some((v) => v != null) ? `Biomarker sub-scores: ${values.map((v) => (v == null ? '—' : Math.round(v))).join(', ')}` : undefined}
+    />
+  )
+}
+
 function Conditions({ list = [], max = 2 }) {
-  if (!list.length) return <span className="text-xs text-ink-4">None recorded</span>
+  if (!list.length) return <span className="text-[0.8125rem] text-ink-3">None recorded</span>
   return (
     <div className="flex max-w-[15rem] flex-wrap gap-1">
-      {list.slice(0, max).map((c) => <Tag key={c} tone="teal">{c}</Tag>)}
-      {list.length > max && <Tag tone="ink" className="cursor-default" >+{list.length - max}</Tag>}
+      {list.slice(0, max).map((c) => <Tag key={c} tone="ink">{c}</Tag>)}
+      {list.length > max && <Tag tone="ink" className="text-ink-3">+{list.length - max}</Tag>}
     </div>
   )
 }
 
 function VideoState({ unlocked }) {
+  const Icon = unlocked ? Unlock : Lock
   return (
-    <span className={cn('inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium', unlocked ? 'bg-teal-50 text-teal-700' : 'bg-cream text-ink-3 ring-1 ring-inset ring-line')}>
-      {unlocked ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+    <span className={cn('inline-flex items-center gap-1.5 whitespace-nowrap text-[0.8125rem]', unlocked ? 'text-teal-700' : 'text-ink-3')}>
+      <Icon aria-hidden className="h-3.5 w-3.5" strokeWidth={1.8} />
       {unlocked ? 'Unlocked' : 'Locked'}
     </span>
   )
 }
 
 function Unread({ n }) {
-  if (!n) return <span className="text-xs text-ink-4">—</span>
+  if (!n) return <span className="text-[0.8125rem] text-ink-4">—</span>
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-apricot-50 px-2.5 py-0.5 text-xs font-semibold text-apricot-600" aria-label={`${n} unread messages`}>
-      <MessageSquare className="h-3 w-3" /> {n}
+    <span className="badge bg-apricot-50 text-apricot-600 ring-1 ring-inset ring-apricot-100" aria-label={`${n} unread messages`}>
+      <MessageSquare aria-hidden className="h-3.5 w-3.5" strokeWidth={1.8} /> <span className="num">{n}</span>
     </span>
   )
 }

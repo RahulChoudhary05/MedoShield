@@ -19,14 +19,14 @@ services:
         sync: false              # Atlas connection string (mongodb+srv://...)
       - key: MONGODB_DB
         value: neuro_shield
-      # AI: Grok for text, Gemini for doctor-enabled video review
+      # AI: Groq (free tier) for text, Gemini for doctor-enabled video review
       - key: LLM_PROVIDER
         value: auto
-      - key: XAI_API_KEY
-        sync: false
-      - key: GROK_MODEL
-        value: grok-4.7
-      - key: GROK_REASONING_EFFORT
+      - key: GROQ_API_KEY
+        sync: false              # console.groq.com/keys (starts with gsk_)
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: GROQ_REASONING_EFFORT
         value: low
       - key: GEMINI_API_KEY
         sync: false

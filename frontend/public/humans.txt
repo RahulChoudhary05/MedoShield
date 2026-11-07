@@ -1,0 +1,13 @@
+/* TEAM */
+Creator, designer & developer: Rahul Choudhary
+Role: Full Stack & AI Developer
+From: India
+GitHub: https://github.com/RahulChoudhary05
+LinkedIn: https://www.linkedin.com/in/rahulchoudhary210505/
+
+/* SITE */
+Name: MedoShield AI
+Standards: HTML5, CSS3, WCAG 2.2 AA (target)
+Components: React 19, Vite, Tailwind CSS, Framer Motion, React Three Fiber, MediaPipe Tasks Vision, Lucide
+Backend: FastAPI, MongoDB Atlas
+Hosting: Cloudflare Pages + Render

@@ -1,18 +1,11 @@
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Footprints, Gauge, Moon } from 'lucide-react'
-import { cn, fmtDate } from '../../../lib/utils'
+import { fmtDate } from '../../../lib/utils'
+import { AxisCaption, C, CURSOR, GRID, TICK, TipCard, useChartMotion } from '../../../components/charts/theme'
 
-const AXIS = { fontSize: 11, fill: '#B9AE9F' }
-
-function ChartTip({ active, payload, unit }) {
+function ChartTip({ active, payload, unit, label: name }) {
   if (!active || !payload?.length) return null
   const p = payload[0]
-  return (
-    <div className="rounded-xl border border-line bg-paper px-3 py-2 text-xs shadow-lift">
-      <p className="text-ink-4">{fmtDate(p.payload.date, 'EEE, d MMM')}</p>
-      <p className="num mt-0.5 text-sm font-semibold text-ink">{p.value}{unit}</p>
-    </div>
-  )
+  return <TipCard title={fmtDate(p.payload.date, 'EEE, d MMM')} rows={[{ label: name, color: p.color || p.stroke || p.fill, value: `${p.value}${unit}` }]} />
 }
 
 function avg(rows, k) {
@@ -20,72 +13,61 @@ function avg(rows, k) {
   return v.length ? Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 10) / 10 : null
 }
 
-function Panel({ icon: Icon, title, value, unit, tone, hint, children }) {
-  const tones = { teal: 'icon-teal shadow-glow', apricot: 'icon-teal shadow-soft', sky: 'icon-teal' }
+function Panel({ title, value, unit, hint, axis, children, summary }) {
   return (
-    <div className="card card-pad card-glow flex min-w-0 flex-col">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-ink-3">{title}</p>
-          <p className="mt-1 text-[1.75rem] font-semibold leading-none text-ink"><span className="num">{value ?? '—'}</span>{value != null && <span className="ml-1 text-sm font-medium text-ink-4">{unit}</span>}</p>
-          <p className="mt-1 text-xs text-ink-4">{hint}</p>
-        </div>
-        <span className={cn('icon-tile h-10 w-10 rounded-xl', tones[tone])}><Icon className="h-[18px] w-[18px]" /></span>
-      </div>
-      <div className="mt-4 h-36 min-w-0">{children}</div>
-    </div>
+    <figure className="card flex min-w-0 flex-col p-5">
+      <figcaption>
+        <p className="kicker">{title}</p>
+        <p className="mt-1.5 flex items-baseline gap-1 leading-none"><span className="num text-[1.75rem] text-ink">{value ?? '—'}</span>{value != null && <span className="font-mono text-[0.8125rem] text-ink-3">{unit}</span>}</p>
+        <p className="mt-1.5 text-[0.8125rem] text-ink-3">{hint}</p>
+      </figcaption>
+      <AxisCaption className="mt-4">{axis}</AxisCaption>
+      <div className="mt-1 h-36 min-w-0" role="img" aria-label={summary}>{children}</div>
+    </figure>
   )
 }
 
 const tick = (d) => fmtDate(d, 'd MMM')
 
 export default function Charts({ records }) {
+  const anim = useChartMotion()
   const rows = [...records].sort((a, b) => a.date.localeCompare(b.date)).slice(-21)
-  const common = { data: rows, margin: { top: 6, right: 4, left: -22, bottom: 0 } }
-  const grid = <CartesianGrid vertical={false} stroke="#F0E9DD" strokeDasharray="3 4" />
-  const x = <XAxis dataKey="date" tickFormatter={tick} tick={AXIS} axisLine={false} tickLine={false} minTickGap={18} />
+  const common = { data: rows, margin: { top: 6, right: 6, left: -16, bottom: 0 } }
+  const grid = <CartesianGrid {...GRID} />
+  const x = <XAxis dataKey="date" tickFormatter={tick} tick={TICK} axisLine={{ stroke: C.line }} tickLine={false} minTickGap={24} />
+  const sleep = avg(rows, 'sleep_hours')
+  const stress = avg(rows, 'stress_level')
+  const walk = avg(rows, 'walking_distance')
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <Panel icon={Moon} title="Sleep" value={avg(rows, 'sleep_hours')} unit="h avg" tone="teal" hint="7–9 h is a healthy target">
+      <Panel title="Sleep · average" value={sleep} unit="h" hint="7–9 h is a healthy target" axis="Hours per night" summary={`Sleep over the last ${rows.length} logs, average ${sleep ?? 'unknown'} hours.`}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart {...common}>
-            <defs>
-              <linearGradient id="sleepFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#2F5D50" />
-                <stop offset="1" stopColor="#2F5D50" stopOpacity={0.8} />
-              </linearGradient>
-            </defs>
             {grid}{x}
-            <YAxis tick={AXIS} axisLine={false} tickLine={false} domain={[0, 'dataMax + 1']} allowDecimals={false} />
-            <Tooltip content={<ChartTip unit=" h" />} cursor={{ fill: 'rgba(47,93,80,.06)' }} />
-            <Bar dataKey="sleep_hours" fill="url(#sleepFill)" radius={[6, 6, 2, 2]} maxBarSize={18} />
+            <YAxis tick={TICK} axisLine={false} tickLine={false} domain={[0, 'dataMax + 1']} allowDecimals={false} width={40} />
+            <Tooltip content={<ChartTip unit=" h" label="Sleep" />} cursor={{ fill: C.cream, fillOpacity: 0.6 }} />
+            <Bar dataKey="sleep_hours" fill={C.pine} radius={[3, 3, 0, 0]} maxBarSize={14} {...anim} />
           </BarChart>
         </ResponsiveContainer>
       </Panel>
-      <Panel icon={Gauge} title="Stress" value={avg(rows, 'stress_level')} unit="/10 avg" tone="teal" hint="Lower is calmer">
+      <Panel title="Stress · average" value={stress} unit="/10" hint="Lower is calmer" axis="Self-rated, 1–10" summary={`Stress over the last ${rows.length} logs, average ${stress ?? 'unknown'} out of 10.`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart {...common}>
             {grid}{x}
-            <YAxis tick={AXIS} axisLine={false} tickLine={false} domain={[0, 10]} ticks={[0, 5, 10]} />
-            <Tooltip content={<ChartTip unit="/10" />} cursor={{ stroke: '#B9AE9F' }} />
-            <Line type="monotone" dataKey="stress_level" stroke="#C8704E" strokeWidth={2.5} dot={{ r: 3, fill: '#fff', strokeWidth: 2 }} activeDot={{ r: 5 }} connectNulls />
+            <YAxis tick={TICK} axisLine={false} tickLine={false} domain={[0, 10]} ticks={[0, 5, 10]} width={40} />
+            <Tooltip content={<ChartTip unit="/10" label="Stress" />} cursor={CURSOR} />
+            <Line type="monotone" dataKey="stress_level" stroke={C.ember} strokeWidth={2} dot={{ r: 2.5, fill: C.paper, stroke: C.ember, strokeWidth: 1.5 }} activeDot={{ r: 4 }} connectNulls {...anim} />
           </LineChart>
         </ResponsiveContainer>
       </Panel>
-      <Panel icon={Footprints} title="Walking" value={avg(rows, 'walking_distance')} unit="km avg" tone="teal" hint="Every short walk counts">
+      <Panel title="Walking · average" value={walk} unit="km" hint="Every short walk counts" axis="Kilometres per day" summary={`Walking over the last ${rows.length} logs, average ${walk ?? 'unknown'} kilometres.`}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart {...common}>
-            <defs>
-              <linearGradient id="walkFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#8FB3A2" stopOpacity={0.45} />
-                <stop offset="1" stopColor="#8FB3A2" stopOpacity={0} />
-              </linearGradient>
-            </defs>
             {grid}{x}
-            <YAxis tick={AXIS} axisLine={false} tickLine={false} allowDecimals={false} />
-            <Tooltip content={<ChartTip unit=" km" />} cursor={{ stroke: '#B9AE9F' }} />
-            <Area type="monotone" dataKey="walking_distance" stroke="#2F5D50" strokeWidth={2.5} fill="url(#walkFill)" connectNulls />
+            <YAxis tick={TICK} axisLine={false} tickLine={false} allowDecimals={false} width={40} />
+            <Tooltip content={<ChartTip unit=" km" label="Walking" />} cursor={CURSOR} />
+            <Area type="monotone" dataKey="walking_distance" stroke={C.pine} strokeWidth={2} fill={C.pine} fillOpacity={0.06} connectNulls {...anim} />
           </AreaChart>
         </ResponsiveContainer>
       </Panel>

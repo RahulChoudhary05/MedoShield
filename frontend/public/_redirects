@@ -1,0 +1,6 @@
+# Signed-in app areas are client-rendered: rewrite (200) to the SPA shell.
+# Every other unknown URL falls through to 404.html with a real 404 status (no soft 404s).
+/app            /index.html  200
+/app/*          /index.html  200
+/doctor         /index.html  200
+/doctor/*        /index.html  200

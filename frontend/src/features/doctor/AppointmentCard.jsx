@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { CalendarDays, Check, Clock3, FileText, MessageSquare, Quote, X } from 'lucide-react'
+import { CalendarDays, Check, Clock3, FileText, MessageSquare, X } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Avatar } from '../../components/ui/Data'
@@ -30,55 +30,63 @@ export default function AppointmentCard({ appt, compact = false, busy = false, o
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
-      className={cn(compact ? 'tile p-4 transition hover:border-teal-200 hover:bg-paper hover:shadow-soft' : 'card card-pad card-interactive')}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.24, ease: [0.2, 0.8, 0.2, 1] }}
+      className={cn(compact ? 'rounded-xl border border-line bg-cream/40 p-4' : 'card card-pad')}
     >
       <div className="flex items-start gap-3">
-        <Avatar name={name} size={compact ? 40 : 46} />
+        <Avatar name={name} size={compact ? 40 : 44} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="truncate text-[0.98rem] font-semibold">{name}</h3>
+            <h3 className="truncate text-[1rem] font-medium">{name}</h3>
             {!compact && <Badge tone={status.tone} dot>{status.label}</Badge>}
           </div>
-          <p className="text-xs text-ink-3">{patientMeta(appt.patient) || 'Details unavailable'} · requested {fmtRelative(appt.created_at)}</p>
+          <p className="text-[0.8125rem] text-ink-3">{patientMeta(appt.patient) || 'Details unavailable'} · requested {fmtRelative(appt.created_at)}</p>
         </div>
-        {!compact && appt.appointment_fee > 0 && <span className="num shrink-0 text-sm font-semibold text-ink">{inr(appt.appointment_fee)}</span>}
+        {!compact && appt.appointment_fee > 0 && <span className="num shrink-0 font-mono text-[0.9375rem] text-ink">{inr(appt.appointment_fee)}</span>}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2 text-xs text-ink-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2.5 py-1 ring-1 ring-line">
-          <CalendarDays className="h-3.5 w-3.5 text-teal-600" /> {fmtDate(appt.preferred_date, 'EEE, d MMM')}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2.5 py-1 ring-1 ring-line">
-          <Clock3 className="h-3.5 w-3.5 text-apricot-500" /> {appt.preferred_time || '—'}
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2.5 py-1 ring-1 ring-line">
-          <ModeIcon className="h-3.5 w-3.5 text-teal-600" /> {mode.label}
-        </span>
+      <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[0.875rem] text-ink-2">
+        <div className="inline-flex items-center gap-1.5">
+          <dt className="sr-only">Date</dt>
+          <CalendarDays aria-hidden strokeWidth={1.8} className="h-4 w-4 text-ink-3" />
+          <dd>{fmtDate(appt.preferred_date, 'EEE, d MMM')}</dd>
+        </div>
+        <div className="inline-flex items-center gap-1.5">
+          <dt className="sr-only">Time</dt>
+          <Clock3 aria-hidden strokeWidth={1.8} className="h-4 w-4 text-ink-3" />
+          <dd className="num font-mono">{appt.preferred_time || '—'}</dd>
+        </div>
+        <div className="inline-flex items-center gap-1.5">
+          <dt className="sr-only">Meeting mode</dt>
+          <ModeIcon aria-hidden strokeWidth={1.8} className="h-4 w-4 text-ink-3" />
+          <dd>{mode.label}</dd>
+        </div>
         {compact && appt.appointment_fee > 0 && (
-          <span className="inline-flex items-center rounded-full bg-paper px-2.5 py-1 font-medium ring-1 ring-line">{inr(appt.appointment_fee)}</span>
+          <div className="inline-flex items-center gap-1.5">
+            <dt className="sr-only">Fee</dt>
+            <dd className="num font-mono">{inr(appt.appointment_fee)}</dd>
+          </div>
         )}
-      </div>
+      </dl>
 
       {appt.message && (
-        <p className={cn('mt-3 flex gap-2 text-sm text-ink-2 text-pretty', compact && 'line-clamp-2')}>
-          <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-4" aria-hidden />
-          <span>{appt.message}</span>
-        </p>
+        <blockquote className={cn('mt-3 border-l-2 border-line pl-3 text-[0.9375rem] leading-relaxed text-ink-2 text-pretty', compact && 'line-clamp-2')}>
+          {appt.message}
+        </blockquote>
       )}
 
       {pending && (onAccept || onDecline) && (
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button size="sm" variant="brand" icon={Check} loading={busy} onClick={() => onAccept?.(appt)} aria-label={`Accept request from ${name}`}>Accept</Button>
-          <Button size="sm" variant="outline" icon={X} disabled={busy} onClick={() => onDecline?.(appt)} aria-label={`Decline request from ${name}`}>Decline</Button>
+          <Button variant="brand" icon={Check} loading={busy} onClick={() => onAccept?.(appt)} aria-label={`Accept request from ${name}`}>Accept</Button>
+          <Button variant="outline" icon={X} disabled={busy} onClick={() => onDecline?.(appt)} aria-label={`Decline request from ${name}`}>Decline</Button>
         </div>
       )}
 
       {appt.status === 'accepted' && appt.patient_id && (
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button size="sm" variant="soft" icon={FileText} to={`/doctor/patients/${appt.patient_id}`}>Open chart</Button>
-          <Button size="sm" variant="ghost" icon={MessageSquare} to={`/doctor/messages/${appt.patient_id}`}>Message</Button>
+          <Button variant="outline" icon={FileText} to={`/doctor/patients/${appt.patient_id}`}>Open chart</Button>
+          <Button variant="ghost" icon={MessageSquare} to={`/doctor/messages/${appt.patient_id}`}>Message</Button>
         </div>
       )}
     </motion.article>

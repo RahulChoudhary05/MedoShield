@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Bell, Download, Lock, Trash2 } from 'lucide-react'
-import { Card, CardHeader } from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Dialog from '../../../components/ui/Dialog'
 import { PasswordInput } from '../../../components/ui/Field'
@@ -13,14 +12,15 @@ import { api, downloadBlob } from '../../../lib/api'
 import { cn, errorMessage } from '../../../lib/utils'
 import { useAuth } from '../../../store/auth'
 import useNotify from '../useNotify'
+import { Section } from '../kit'
 
-function Row({ icon: Icon, title, text, children, tone = 'bg-cream text-ink-2' }) {
+function Row({ icon: Icon, title, text, children, tone = 'text-ink-3' }) {
   return (
     <div className="flex flex-col gap-4 py-5 first:pt-0 last:pb-0 sm:flex-row sm:items-center">
-      <span className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-2xl', tone)}><Icon className="h-5 w-5" /></span>
+      <Icon className={cn('h-5 w-5 shrink-0', tone)} strokeWidth={1.8} aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="font-medium text-ink">{title}</p>
-        <p className="text-sm text-ink-3 text-pretty">{text}</p>
+        <p className="text-[0.9375rem] text-ink-3 text-pretty">{text}</p>
       </div>
       <div className="shrink-0">{children}</div>
     </div>
@@ -31,10 +31,9 @@ export function NotificationsCard() {
   const { perm, request } = useNotify()
   const on = perm === 'granted'
   return (
-    <Card id="notifications" as="section" className="scroll-mt-24">
-      <CardHeader icon={Bell} tone="apricot" title="Notifications" subtitle="Medicine reminders on this device" />
+    <Section id="notifications" icon={Bell} kicker="Medicine reminders on this device" title="Notifications">
       <div className="flex items-center gap-4">
-        <p className="flex-1 text-sm text-ink-3">
+        <p id="notif-desc" className="flex-1 text-[0.9375rem] text-ink-3">
           {perm === 'unsupported'
             ? 'This browser doesn’t support notifications. You’ll still see reminders inside MedoShield.'
             : perm === 'denied'
@@ -47,14 +46,15 @@ export function NotificationsCard() {
           role="switch"
           aria-checked={on}
           aria-label="Browser notifications"
+          aria-describedby="notif-desc"
           disabled={perm !== 'default'}
           onClick={request}
-          className={cn('relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed', on ? 'bg-teal-500' : 'bg-line', perm === 'default' && 'hover:bg-ink-4/40')}
+          className={cn('relative h-7 w-12 shrink-0 rounded-full transition-colors duration-150 disabled:cursor-not-allowed before:absolute before:-inset-2', on ? 'bg-teal-700' : 'bg-line', perm === 'default' && 'hover:bg-ink-4/40')}
         >
-          <motion.span layout transition={{ type: 'spring', stiffness: 500, damping: 32 }} className={cn('absolute top-1 h-5 w-5 rounded-full bg-white shadow-soft', on ? 'right-1' : 'left-1')} />
+          <motion.span layout transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }} className={cn('absolute top-1 h-5 w-5 rounded-full bg-paper', on ? 'right-1' : 'left-1')} />
         </button>
       </div>
-    </Card>
+    </Section>
   )
 }
 
@@ -94,14 +94,13 @@ export default function Privacy() {
   }
 
   return (
-    <Card id="privacy" as="section" className="scroll-mt-24">
-      <CardHeader icon={Lock} tone="teal" title="Privacy & data" subtitle="Your health data belongs to you" />
+    <Section id="privacy" icon={Lock} kicker="Your health data belongs to you" title="Privacy & data">
       <div className="divide-y divide-line/70">
-        <Row icon={Download} tone="bg-teal-50 text-teal-600" title="Download my data" text="Everything we store about you — checks, reports, messages, logs — as a single JSON file.">
-          <Button variant="outline" size="sm" icon={Download} loading={exportData.isPending} onClick={() => exportData.mutate()}>Download</Button>
+        <Row icon={Download} tone="text-teal-700" title="Download my data" text="Everything we store about you — checks, reports, messages, logs — as a single JSON file.">
+          <Button variant="outline" icon={Download} loading={exportData.isPending} onClick={() => exportData.mutate()}>Download my data</Button>
         </Row>
-        <Row icon={Trash2} tone="bg-rose-50 text-rose-500" title="Delete my account" text="Permanently erase your account and all health data. Your doctors lose access immediately.">
-          <Button variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50 hover:text-rose-600" icon={Trash2} onClick={() => setOpen(true)}>Delete account</Button>
+        <Row icon={Trash2} tone="text-rose-500" title="Delete my account" text="Permanently erase your account and all health data. Your doctors lose access immediately.">
+          <Button variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-600" icon={Trash2} onClick={() => setOpen(true)}>Delete account</Button>
         </Row>
       </div>
 
@@ -113,21 +112,21 @@ export default function Privacy() {
         size="sm"
         footer={
           <>
-            <Button variant="ghost" size="sm" onClick={() => close(false)}>Keep my account</Button>
-            <Button variant="danger" size="sm" type="submit" form="delete-form" loading={del.isPending} disabled={!password || !ack}>Delete forever</Button>
+            <Button variant="ghost" onClick={() => close(false)}>Keep my account</Button>
+            <Button variant="danger" type="submit" form="delete-form" loading={del.isPending} disabled={!password || !ack}>Delete forever</Button>
           </>
         }
       >
         <form id="delete-form" onSubmit={(e) => { e.preventDefault(); if (password && ack) del.mutate() }} className="space-y-4">
           <Notice tone="danger" icon={Trash2}>Movement checks, reports, medicines, messages and appointments will all be erased. This can’t be undone.</Notice>
-          <p className="text-sm text-ink-3">Tip: download your data first if you’d like a copy.</p>
+          <p className="text-[0.9375rem] text-ink-3">Tip: download your data first if you’d like a copy.</p>
           <PasswordInput label="Confirm with your password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" maxLength={128} />
-          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-2">
+          <label className="flex min-h-[44px] cursor-pointer items-start gap-2.5 text-[0.9375rem] text-ink-2">
             <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 h-4 w-4 accent-rose-500" />
             I understand my data cannot be recovered.
           </label>
         </form>
       </Dialog>
-    </Card>
+    </Section>
   )
 }

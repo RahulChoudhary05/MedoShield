@@ -61,23 +61,23 @@ export default function SOSButton() {
           onPointerLeave={cancel}
           onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && !holding && start()}
           onKeyUp={cancel}
-          whileTap={{ scale: 0.94 }}
+          whileTap={{ scale: 0.97 }}
           aria-label="Emergency SOS - press and hold"
-          className="group relative grid h-14 w-14 place-items-center rounded-full bg-rose-500 text-white shadow-[0_14px_34px_-10px_rgba(219,79,64,.75)] outline-none ring-4 ring-rose-100 transition hover:bg-rose-600"
+          aria-describedby="sos-hint"
+          className="group relative grid h-14 w-14 place-items-center rounded-full bg-rose-500 text-paper shadow-float ring-4 ring-paper transition-colors duration-150 hover:bg-rose-600"
         >
-          <span className="absolute inset-0 animate-pulse2 rounded-full bg-rose-400/60" />
-          <svg className="absolute inset-0 -rotate-90" viewBox="0 0 56 56">
-            <motion.circle cx="28" cy="28" r="26" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeDasharray={163} initial={false}
+          <svg className="absolute inset-0 -rotate-90" viewBox="0 0 56 56" aria-hidden>
+            <motion.circle cx="28" cy="28" r="26" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeDasharray={163} initial={false}
               animate={{ strokeDashoffset: holding ? 0 : 163 }} transition={{ duration: holding ? HOLD_MS / 1000 : 0.2, ease: 'linear' }} />
           </svg>
-          <Siren className="relative h-6 w-6" />
-          <span className="pointer-events-none absolute right-16 whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lift transition group-hover:opacity-100">
-            {sending ? 'Sending…' : 'Hold for SOS'}
+          <Siren className="relative h-6 w-6" strokeWidth={1.8} aria-hidden />
+          <span id="sos-hint" className="pointer-events-none absolute right-16 whitespace-nowrap rounded-md bg-ink px-2.5 py-1 font-mono text-[0.8125rem] text-paper opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+            {sending ? 'Sending…' : holding ? 'Keep holding…' : 'Hold for SOS'}
           </span>
         </motion.button>
       </div>
 
-      <AnimatePresence>{sending && <motion.div className="fixed inset-0 z-50 grid place-items-center bg-rose-500/15 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><div className="rounded-3xl bg-paper px-8 py-6 text-center shadow-lift"><Siren className="mx-auto h-8 w-8 animate-pulse text-rose-500" /><p className="mt-2 font-display text-lg font-semibold">Sending SOS…</p><p className="text-sm text-ink-3">Getting your location</p></div></motion.div>}</AnimatePresence>
+      <AnimatePresence>{sending && <motion.div className="fixed inset-0 z-50 grid place-items-center bg-ink/20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="alertdialog" aria-live="assertive" aria-label="Sending SOS"><div className="rounded-3xl border border-rose-200 bg-paper px-8 py-6 text-center shadow-float"><Siren className="mx-auto h-7 w-7 text-rose-500" strokeWidth={1.8} aria-hidden /><p className="mt-2 text-[1.125rem] font-semibold">Sending SOS…</p><p className="font-mono text-[0.8125rem] text-ink-3">Getting your location</p></div></motion.div>}</AnimatePresence>
 
       <Dialog open={!!result} onOpenChange={(o) => !o && setResult(null)} title={result?.failed ? 'SOS not sent' : 'SOS alert sent'} description={result?.failed ? 'Please call emergency services now.' : 'Your care team has been notified.'}
         footer={<><Button variant="outline" onClick={() => setResult(null)}>Close</Button><Button variant="danger" icon={Phone} href="tel:112">Call 112</Button></>}>
@@ -87,7 +87,7 @@ export default function SOSButton() {
               {result?.sms_sent ? 'Your emergency contact has your location.' : (result?.detail || 'Add an emergency contact in Settings so we can text them next time.')}
             </Notice>
             {result?.maps_link ? (
-              <a href={result.maps_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-2xl border border-line px-4 py-3 text-sm text-teal-700 hover:bg-teal-50"><MapPin className="h-4 w-4" /> View shared location</a>
+              <a href={result.maps_link} target="_blank" rel="noopener noreferrer" className="flex min-h-[44px] items-center gap-2 rounded-lg border border-line px-4 py-3 text-[0.9375rem] text-teal-700 hover:bg-teal-50"><MapPin className="h-4 w-4" strokeWidth={1.8} aria-hidden /> View shared location</a>
             ) : (
               <Notice tone="info">Location wasn't available — allow location access for faster help.</Notice>
             )}

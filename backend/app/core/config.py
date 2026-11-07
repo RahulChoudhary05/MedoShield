@@ -74,8 +74,12 @@ class Settings(BaseSettings):
     DB_HEARTBEAT_SECONDS: int = 240   # ping Atlas regularly; reconnect automatically if it drops
 
     # ── AI ─────────────────────────────────────────────────────────────────
-    # "auto" = Grok when XAI_API_KEY is set, else Gemini. The other provider (if keyed) is the fallback.
-    LLM_PROVIDER: Literal["auto", "grok", "gemini"] = "auto"
+    # "auto" = first configured of Groq → Grok → Gemini; the others (if keyed) are automatic fallbacks.
+    LLM_PROVIDER: Literal["auto", "groq", "grok", "gemini"] = "auto"
+    GROQ_API_KEY: str = ""              # https://console.groq.com/keys  (keys start with gsk_)
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+    GROQ_MODEL: str = "openai/gpt-oss-120b"
+    GROQ_REASONING_EFFORT: str = "low"
     XAI_API_KEY: str = ""
     XAI_BASE_URL: str = "https://api.x.ai/v1"
     GROK_MODEL: str = "grok-4.7"
@@ -120,6 +124,12 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _derive_and_guard(self) -> "Settings":
+        # A Groq key (gsk_...) pasted into XAI_API_KEY is moved to the right provider.
+        if self.XAI_API_KEY.startswith("gsk_") and not self.GROQ_API_KEY:
+            self.GROQ_API_KEY, self.XAI_API_KEY = self.XAI_API_KEY, ""
+        # Llama 3.x on Groq is enterprise-only now; use the free-tier model with schema support.
+        if self.GROQ_MODEL.startswith(("llama-3", "llama3")):
+            self.GROQ_MODEL = "openai/gpt-oss-120b"
         prod = self.ENVIRONMENT == "production"
         if self.COOKIE_SECURE is None:
             self.COOKIE_SECURE = self.ENVIRONMENT not in ("development", "test")

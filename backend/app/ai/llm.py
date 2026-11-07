@@ -1,4 +1,7 @@
-"""Multi-provider LLM client: xAI Grok (default) with Google Gemini as fallback.
+"""Multi-provider LLM client: Groq, xAI Grok and Google Gemini with automatic fallback.
+
+Groq (OpenAI-compatible chat completions, free developer tier) is preferred when
+GROQ_API_KEY is set; GPT-OSS models get schema-guided JSON via response_format.
 
 Provider selection (`LLM_PROVIDER`):
   * "grok"   - use Grok; fall back to Gemini if a Gemini key exists and Grok fails
@@ -43,6 +46,10 @@ _grok_reasoning_ok = True  # flipped off if the model rejects the reasoning para
 
 
 # ── Provider selection ──────────────────────────────────────────────────
+def _has_groq() -> bool:
+    return bool(settings.GROQ_API_KEY)
+
+
 def _has_grok() -> bool:
     return bool(settings.XAI_API_KEY)
 
@@ -51,26 +58,21 @@ def _has_gemini() -> bool:
     return bool(settings.GEMINI_API_KEY)
 
 
-def primary() -> Optional[str]:
-    pref = settings.LLM_PROVIDER
-    if pref == "grok" and _has_grok():
-        return "grok"
-    if pref == "gemini" and _has_gemini():
-        return "gemini"
-    if _has_grok():
-        return "grok"
-    if _has_gemini():
-        return "gemini"
-    return None
+_HAS = {"groq": _has_groq, "grok": _has_grok, "gemini": _has_gemini}
 
 
 def _order() -> List[str]:
-    first = primary()
-    if not first:
-        return []
-    other = "gemini" if first == "grok" else "grok"
-    has_other = _has_gemini() if other == "gemini" else _has_grok()
-    return [first, other] if has_other else [first]
+    keyed = [p for p in ("groq", "grok", "gemini") if _HAS[p]()]
+    pref = settings.LLM_PROVIDER
+    if pref in keyed:
+        keyed.remove(pref)
+        keyed.insert(0, pref)
+    return keyed
+
+
+def primary() -> Optional[str]:
+    order = _order()
+    return order[0] if order else None
 
 
 def available() -> bool:
@@ -83,6 +85,8 @@ def supports_video() -> bool:
 
 def model_name() -> str:
     p = primary()
+    if p == "groq":
+        return settings.GROQ_MODEL
     if p == "grok":
         return settings.GROK_MODEL
     if p == "gemini":
@@ -116,10 +120,12 @@ async def generate(
     """Return model text, or "" when no provider is available or all fail."""
     has_video = any("inline_data" in p for c in contents for p in c.get("parts", []) if isinstance(p, dict))
     for provider in _order():
-        if provider == "grok" and has_video:
-            continue  # Grok has no video input
+        if provider in ("grok", "groq") and has_video:
+            continue  # only Gemini accepts video
         try:
-            if provider == "grok":
+            if provider == "groq":
+                out = await _groq(system, contents, temperature, max_tokens, json_schema)
+            elif provider == "grok":
                 out = await _grok(system, contents, temperature, max_tokens, json_schema)
             else:
                 out = await _gemini(system, contents, temperature, max_tokens, json_schema)
@@ -203,6 +209,53 @@ async def _grok(system, contents, temperature, max_tokens, json_schema) -> str:
                     if part.get("type") == "output_text" and part.get("text"):
                         texts.append(part["text"])
         return "".join(texts).strip()
+    return ""
+
+
+# ── Groq (OpenAI-compatible chat completions) ──────────────────────────
+_GROQ_SCHEMA_MODELS = ("openai/gpt-oss", "qwen/qwen3", "meta-models/muse-spark")
+_groq_reasoning_ok = True
+
+
+async def _groq(system, contents, temperature, max_tokens, json_schema) -> str:
+    global _groq_reasoning_ok
+    model = settings.GROQ_MODEL
+    sys_text = system
+    payload: Dict[str, Any] = {"model": model, "temperature": temperature, "max_completion_tokens": max_tokens}
+    if json_schema is not None:
+        schema = to_json_schema(json_schema)
+        if model.startswith(_GROQ_SCHEMA_MODELS):
+            payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "medoshield_output", "strict": False, "schema": schema}}
+        else:  # older models: JSON mode + schema described in the instructions
+            payload["response_format"] = {"type": "json_object"}
+            sys_text += "\n\nReply ONLY with a JSON object matching this JSON Schema:\n" + json.dumps(schema)
+    if model.startswith("openai/gpt-oss") and settings.GROQ_REASONING_EFFORT and _groq_reasoning_ok:
+        payload["reasoning_effort"] = settings.GROQ_REASONING_EFFORT
+    payload["messages"] = [{"role": "system", "content": sys_text}] + _grok_input(contents)
+
+    url = f"{settings.GROQ_BASE_URL.rstrip('/')}/chat/completions"
+    headers = {"Authorization": f"Bearer {settings.GROQ_API_KEY}", "Content-Type": "application/json"}
+    for attempt in range(3):
+        try:
+            resp = await _http().post(url, json=payload, headers=headers)
+        except httpx.HTTPError as exc:
+            log.warning("Groq request error (%s)", type(exc).__name__)
+            await asyncio.sleep(1 + random.random())
+            continue
+        if resp.status_code == 400 and "reasoning_effort" in payload and "reasoning" in resp.text.lower():
+            _groq_reasoning_ok = False
+            payload.pop("reasoning_effort", None)
+            continue
+        if resp.status_code in (429, 500, 502, 503, 504) and attempt < 2:
+            await asyncio.sleep((2 ** attempt) + random.random())
+            continue
+        if resp.status_code != 200:
+            log.warning("Groq HTTP %s", resp.status_code)
+            return ""
+        choices = resp.json().get("choices") or []
+        if not choices:
+            return ""
+        return (choices[0].get("message", {}).get("content") or "").strip()
     return ""
 
 

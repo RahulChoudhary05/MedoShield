@@ -1,10 +1,19 @@
 {
   "name": "MedoShield AI",
   "short_name": "MedoShield",
-  "description": "Privacy-first tremor, gait and balance monitoring.",
+  "description": "Privacy-first tremor, gait and balance monitoring from a ten-second phone check.",
+  "id": "/",
   "start_url": "/app",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F8F4EC",
-  "theme_color": "#F8F4EC",
-  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "lang": "en-IN",
+  "categories": ["health", "medical"],
+  "background_color": "#F6F2EA",
+  "theme_color": "#F6F2EA",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
 }

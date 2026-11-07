@@ -2,20 +2,17 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { BellOff, BellRing, CalendarCheck2, CheckCircle2, Pill, Plus } from 'lucide-react'
+import { BellOff, BellRing, Pill, Plus } from 'lucide-react'
 import { api } from '../../lib/api'
 import { errorMessage } from '../../lib/utils'
-import { PageHeader, ScoreRing } from '../../components/ui/Data'
-import { Card, CardHeader } from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
-import { Badge } from '../../components/ui/Badge'
-import { EmptyState, ErrorState, Skeleton } from '../../components/ui/Feedback'
-import { Stagger, StaggerItem } from '../../components/ui/motion'
+import { CountUp, PageHeader, Stagger, StaggerItem } from '../../components/ui/motion'
 import TodaySchedule, { buildDoses } from '../../features/care/meds/TodaySchedule'
 import MedCard from '../../features/care/meds/MedCard'
 import AddMedDialog from '../../features/care/meds/AddMedDialog'
 import GuidancePanel from '../../features/care/meds/GuidancePanel'
 import { ConfirmDialog } from '../../features/care/shared'
+import { Empty, InlineError, Section, SkeletonRows } from '../../features/care/kit'
 import useNotify from '../../features/care/useNotify'
 
 function adherenceCopy(v) {
@@ -46,82 +43,85 @@ export default function Medications() {
   const meds = p?.medications || []
   const doses = buildDoses(p).flatMap((g) => g.items)
   const done = doses.filter((d) => d.status === 'taken').length
+  const adherence = p?.adherence_14d
 
   const reminderBtn =
     perm === 'granted' ? (
-      <Badge tone="teal" className="h-9 px-3.5 text-sm"><BellRing className="h-4 w-4" /> Reminders on</Badge>
+      <span className="inline-flex h-11 items-center gap-2 rounded-lg border border-teal-100 bg-teal-50 px-3.5 text-[0.9375rem] text-teal-700"><BellRing className="h-4 w-4" strokeWidth={1.8} aria-hidden /> Reminders on</span>
     ) : perm === 'denied' ? (
-      <Badge tone="ink" className="h-9 px-3.5 text-sm"><BellOff className="h-4 w-4" /> Notifications blocked</Badge>
+      <span className="inline-flex h-11 items-center gap-2 rounded-lg border border-line bg-cream px-3.5 text-[0.9375rem] text-ink-3"><BellOff className="h-4 w-4" strokeWidth={1.8} aria-hidden /> Notifications blocked</span>
     ) : perm === 'unsupported' ? null : (
-      <Button variant="outline" size="md" icon={BellRing} onClick={request}>Enable reminders</Button>
+      <Button variant="outline" icon={BellRing} onClick={request}>Turn on reminders</Button>
     )
 
   return (
     <div>
       <PageHeader
-        eyebrow="Care"
+        kicker="Medications"
         title="Your"
         accent="medicines"
-        subtitle="Today’s doses, gentle reminders and safe guidance — all in one calm place."
+        description="Today’s doses, reminders and safe over-the-counter guidance in one place."
         actions={<>{reminderBtn}<Button variant="brand" icon={Plus} onClick={() => setAdding(true)}>Add medicine</Button></>}
       />
 
       {plan.isError ? (
-        <ErrorState error={plan.error} onRetry={plan.refetch} />
+        <InlineError error={plan.error} onRetry={plan.refetch} />
       ) : (
-        <Stagger className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-            <StaggerItem>
-              <Card className="h-full">
-                <CardHeader icon={CalendarCheck2} title="Today" subtitle={new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
-                  action={doses.length > 0 && <Badge tone={done === doses.length ? 'teal' : 'ink'}>{done}/{doses.length} taken</Badge>} />
+        <Stagger className="space-y-5">
+          <StaggerItem>
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+              <Section
+                kicker={new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+                title="Today’s doses"
+                action={doses.length > 0 && <span className="font-mono text-[0.8125rem] text-ink-3"><span className="num text-ink">{done}</span>/<span className="num">{doses.length}</span> taken</span>}
+              >
                 {plan.isLoading ? (
-                  <div className="space-y-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20" />)}</div>
+                  <SkeletonRows rows={3} rowClassName="h-16" />
                 ) : doses.length === 0 ? (
-                  <EmptyState icon={Pill} title="No doses scheduled" text="Add a medicine and its times — your day will appear here as a simple timeline." action={<Button variant="soft" size="sm" icon={Plus} onClick={() => setAdding(true)}>Add your first medicine</Button>} />
+                  <Empty icon={Pill} text="Add a medicine and its times — your day appears here as a timeline." action={<Button variant="outline" icon={Plus} onClick={() => setAdding(true)}>Add your first medicine</Button>} />
                 ) : (
                   <TodaySchedule plan={p} />
                 )}
-              </Card>
-            </StaggerItem>
+              </Section>
 
-            <StaggerItem>
-              <Card className="card-tint-teal relative h-full overflow-hidden">
-                <CardHeader icon={CheckCircle2} title="Adherence" subtitle="Last 14 days" />
+              <Section kicker="Last 14 days" title="Adherence" className="h-full">
                 {plan.isLoading ? (
-                  <Skeleton className="mx-auto h-40 w-40 rounded-full" />
+                  <SkeletonRows rows={2} rowClassName="h-20" />
                 ) : (
-                  <div className="flex flex-col items-center text-center">
-                    <ScoreRing value={p?.adherence_14d} size={156} label="On time" color={p?.adherence_14d != null && p.adherence_14d < 70 ? '#C06D48' : '#3A6652'} />
-                    <p className="mt-4 max-w-xs text-sm text-ink-3 text-pretty">{adherenceCopy(p?.adherence_14d)}</p>
-                    <div className="mt-5 grid w-full grid-cols-2 gap-3">
-                      <div className="tile bg-paper/80 p-3"><p className="num text-teal-700 text-2xl font-semibold">{meds.length}</p><p className="text-xs text-ink-3">Medicines</p></div>
-                      <div className="tile bg-paper/80 p-3"><p className="num text-apricot-500 text-2xl font-semibold">{doses.length}</p><p className="text-xs text-ink-3">Doses today</p></div>
+                  <div aria-live="polite">
+                    <p className="kicker">Doses taken on time</p>
+                    <p className="mt-2 flex items-baseline gap-1 leading-none">
+                      {adherence == null ? <span className="num text-[3rem] text-ink-3">—</span> : <CountUp value={adherence} className="text-[3rem] text-ink" />}
+                      {adherence != null && <span className="font-mono text-[0.9375rem] text-ink-3">%</span>}
+                    </p>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-cream" aria-hidden>
+                      <div className="h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.max(0, Math.min(100, adherence || 0))}%`, background: adherence != null && adherence < 70 ? '#B95A31' : '#234A38' }} />
                     </div>
+                    <p className="mt-4 text-[0.9375rem] text-ink-2">{adherenceCopy(adherence)}</p>
+                    <dl className="mt-5 grid grid-cols-2 gap-6 border-t border-line pt-4">
+                      <div><dt className="kicker">Medicines</dt><dd className="num mt-1 text-[1.5rem] text-ink">{meds.length}</dd></div>
+                      <div><dt className="kicker">Doses today</dt><dd className="num mt-1 text-[1.5rem] text-ink">{doses.length}</dd></div>
+                    </dl>
                   </div>
                 )}
-              </Card>
-            </StaggerItem>
-          </div>
+              </Section>
+            </div>
+          </StaggerItem>
 
           <StaggerItem>
-            <div className="mb-4 flex items-end justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Medicine cabinet</h2>
-                <p className="text-sm text-ink-3">Prescriptions from your doctor are locked so they stay accurate.</p>
-              </div>
-            </div>
-            {plan.isLoading ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-52 rounded-3xl" />)}</div>
-            ) : meds.length === 0 ? (
-              <Card><EmptyState icon={Pill} tone="apricot" title="Your cabinet is empty" text="Medicines you add — or your doctor prescribes — will show up here." /></Card>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <AnimatePresence>
-                  {meds.map((m, i) => <MedCard key={m.name} m={m} index={i} onRemove={setRemoving} />)}
-                </AnimatePresence>
-              </div>
-            )}
+            <Section kicker={meds.length ? `${meds.length} item${meds.length === 1 ? '' : 's'}` : 'Empty'} title="Medicine cabinet" description="Prescriptions from your doctor are locked so they stay accurate.">
+              {plan.isLoading ? (
+                <SkeletonRows rows={3} rowClassName="h-20" />
+              ) : meds.length === 0 ? (
+                <Empty icon={Pill} text="Medicines you add — or your doctor prescribes — show up here." action={<Button variant="outline" icon={Plus} onClick={() => setAdding(true)}>Add a medicine</Button>} />
+              ) : (
+                <ul className="-my-1 divide-y divide-line">
+                  <AnimatePresence initial={false}>
+                    {meds.map((m, i) => <MedCard key={m.name} m={m} index={i} onRemove={setRemoving} />)}
+                  </AnimatePresence>
+                </ul>
+              )}
+            </Section>
           </StaggerItem>
 
           <StaggerItem>
@@ -136,7 +136,7 @@ export default function Medications() {
         onOpenChange={(o) => !o && setRemoving(null)}
         title={`Remove ${removing?.name || 'medicine'}?`}
         description="Reminders for it will stop. Your past dose history is kept."
-        confirmLabel="Remove"
+        confirmLabel="Remove medicine"
         loading={remove.isPending}
         onConfirm={() => remove.mutate(removing.name)}
       />

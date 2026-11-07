@@ -63,20 +63,20 @@ export default function RequestDialog({ doctor: current, onOpenChange, onDone })
       description="Your doctor confirms the final time. Once they accept, secure messaging opens."
       footer={
         <>
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button variant="brand" size="sm" type="submit" form="appt-form" loading={req.isPending}>Send request</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="brand" type="submit" form="appt-form" loading={req.isPending}>Send request</Button>
         </>
       }
     >
       {doctor && (
         <form id="appt-form" onSubmit={submit} className="space-y-4" noValidate>
-          <div className="tile flex items-center gap-3 p-3">
+          <div className="flex items-center gap-3 border-b border-line pb-4">
             <Avatar name={doctor.full_name} size={44} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-ink">{doctor.full_name}</p>
-              <p className="truncate text-sm text-ink-3">{doctor.specialty}{doctor.clinic_name ? ` · ${doctor.clinic_name}` : ''}</p>
+              <p className="truncate text-[0.9375rem] text-ink-3">{doctor.specialty}{doctor.clinic_name ? ` · ${doctor.clinic_name}` : ''}</p>
             </div>
-            <p className="num shrink-0 text-sm font-semibold text-ink">{fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : 'Free'}</p>
+            <p className="num shrink-0 text-ink">{fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : 'Free'}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -86,7 +86,7 @@ export default function RequestDialog({ doctor: current, onOpenChange, onDone })
 
           <fieldset>
             <legend className="label">How would you like to meet?</legend>
-            <div className="grid grid-cols-3 gap-2" role="radiogroup">
+            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Meeting mode">
               {MODES.map((m) => {
                 const on = f.mode === m.value
                 return (
@@ -96,9 +96,9 @@ export default function RequestDialog({ doctor: current, onOpenChange, onDone })
                     role="radio"
                     aria-checked={on}
                     onClick={() => setF((s) => ({ ...s, mode: m.value }))}
-                    className={cn('flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-xs font-medium transition', on ? 'border-teal-400 bg-teal-50 text-teal-700 ring-4 ring-teal-50' : 'border-line bg-paper text-ink-3 hover:border-ink-4')}
+                    className={cn('flex min-h-[64px] flex-col items-center justify-center gap-1.5 rounded-lg border px-2 py-3 text-[0.8125rem] font-medium transition duration-150', on ? 'border-teal-700 bg-teal-50 text-teal-800 ring-1 ring-teal-700' : 'border-line bg-paper text-ink-2 hover:border-ink-4')}
                   >
-                    <m.icon className="h-5 w-5" /> {m.label}
+                    <m.icon className="h-5 w-5" strokeWidth={1.8} aria-hidden /> {m.label}
                   </button>
                 )
               })}
@@ -106,7 +106,7 @@ export default function RequestDialog({ doctor: current, onOpenChange, onDone })
           </fieldset>
 
           <div>
-            <label htmlFor="appt-msg" className="label">Anything they should know? <span className="font-normal text-ink-4">(optional)</span></label>
+            <label htmlFor="appt-msg" className="label">Anything they should know? <span className="font-normal text-ink-3">(optional)</span></label>
             <textarea id="appt-msg" className="input min-h-[96px]" maxLength={600} placeholder="e.g. My tremor has felt stronger in the mornings for two weeks." value={f.message} onChange={(e) => setF((s) => ({ ...s, message: e.target.value }))} />
             <p className="help text-right">{f.message.length}/600</p>
           </div>

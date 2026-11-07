@@ -3,17 +3,20 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { CalendarHeart, CheckCircle2, FileHeart, History, ScanLine, Sparkles, Video } from 'lucide-react'
 import { api } from '../../../lib/api'
-import { LAB_RISK, cn, fmtDate, fmtDay, riskOf } from '../../../lib/utils'
+import { cn, fmtDate, fmtDay } from '../../../lib/utils'
 import { Card } from '../../../components/ui/Card'
 import { Badge, RiskBadge } from '../../../components/ui/Badge'
 import { EmptyState, ErrorState, Skeleton } from '../../../components/ui/Feedback'
+import { LabRiskBadge } from '../shared'
+
+const sentence = (t) => (t ? `${String(t)[0].toUpperCase()}${String(t).slice(1)}` : t)
 
 const TYPES = {
-  movement_check: { label: 'Movement', icon: ScanLine, cls: 'icon-tile icon-teal' },
-  video_review: { label: 'Video', icon: Video, cls: 'icon-tile icon-teal' },
-  lab_report: { label: 'Labs', icon: FileHeart, cls: 'icon-tile icon-teal' },
-  clinician_summary: { label: 'AI summary', icon: Sparkles, cls: 'icon-tile icon-teal' },
-  appointment: { label: 'Appointments', icon: CalendarHeart, cls: 'icon-tile icon-teal' },
+  movement_check: { label: 'Movement', icon: ScanLine },
+  video_review: { label: 'Video', icon: Video },
+  lab_report: { label: 'Labs', icon: FileHeart },
+  clinician_summary: { label: 'AI summary', icon: Sparkles },
+  appointment: { label: 'Appointments', icon: CalendarHeart },
 }
 
 export default function TimelineTab({ patientId }) {
@@ -37,10 +40,11 @@ export default function TimelineTab({ patientId }) {
 
   if (q.isLoading) return <Card><div className="space-y-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}</div></Card>
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />
-  if (!items.length) return <Card><EmptyState icon={History} title="Nothing on the timeline yet" text="Checks, video reviews, lab reports, AI summaries and appointments will build up here chronologically." /></Card>
+  if (!items.length) return <Card><EmptyState icon={History} headingLevel={2} title="Nothing on the timeline yet" text="Checks, video reviews, lab reports, AI summaries and appointments will build up here in date order." /></Card>
 
   return (
     <Card>
+      <h2 className="sr-only">Timeline</h2>
       <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filter timeline">
         {[['all', 'Everything', items.length], ...Object.entries(TYPES).filter(([k]) => counts[k]).map(([k, t]) => [k, t.label, counts[k]])].map(([k, l, n]) => (
           <button
@@ -48,39 +52,46 @@ export default function TimelineTab({ patientId }) {
             type="button"
             aria-pressed={type === k}
             onClick={() => setType(k)}
-            className={cn('inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition', type === k ? 'border-ink bg-ink text-white' : 'border-line bg-paper text-ink-3 hover:border-ink-4 hover:text-ink')}
+            className={cn(
+              'inline-flex h-11 items-center gap-2 rounded-lg border px-3.5 text-[0.875rem] transition-colors duration-150',
+              type === k ? 'border-ink-4 bg-paper font-medium text-ink shadow-soft' : 'border-line bg-cream/50 text-ink-3 hover:text-ink',
+            )}
           >
-            {l} <span className={cn('rounded-full px-1.5 text-[0.65rem]', type === k ? 'bg-white/20' : 'bg-ink/[.06]')}>{n}</span>
+            {l} <span className="num font-mono text-[0.8125rem] text-ink-4">{n}</span>
           </button>
         ))}
       </div>
 
-      <div className="space-y-7">
+      <div className="space-y-8">
         {groups.map((g) => (
           <section key={g.key} aria-label={g.label}>
-            <h3 className="mb-3 flex items-center gap-3 text-xs font-semibold uppercase tracking-[.14em] text-ink-4">
-              {g.label}<span className="h-px flex-1 bg-line" />
+            <h3 className="kicker mb-2 flex items-center gap-3">
+              {g.label}<span aria-hidden className="h-px flex-1 bg-line" />
             </h3>
-            <ol className="relative space-y-1 before:absolute before:bottom-3 before:left-[1.2rem] before:top-3 before:w-px before:bg-line">
+            <ol className="relative before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-px before:bg-line">
               {g.items.map((i, idx) => {
-                const t = TYPES[i.type] || { icon: History, cls: 'bg-cream text-ink-3', label: i.type }
+                const t = TYPES[i.type] || { icon: History, label: i.type }
                 return (
                   <motion.li
                     key={`${i.type}-${i.id}`}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: Math.min(idx, 8) * 0.03, duration: 0.35 }}
-                    className="relative flex gap-3 rounded-2xl py-2 pr-2 transition hover:bg-cream/70"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(idx, 8) * 0.04, duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="relative flex gap-3 py-2.5"
                   >
-                    <span className={cn('relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-4 ring-paper', t.cls)}><t.icon className="h-4 w-4" /></span>
-                    <div className="min-w-0 flex-1 pt-0.5">
+                    <span className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-paper text-ink-2 ring-1 ring-inset ring-line">
+                      <t.icon aria-hidden className="h-4 w-4" strokeWidth={1.8} />
+                    </span>
+                    <div className="min-w-0 flex-1 pt-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold capitalize text-ink">{i.title}</p>
+                        <p className="text-[0.9375rem] font-medium text-ink">{sentence(i.title)}</p>
                         <LevelBadge item={i} />
-                        {i.type === 'video_review' && (i.reviewed ? <Badge tone="teal"><CheckCircle2 className="h-3 w-3" />Reviewed</Badge> : <Badge tone="teal" dot>Needs review</Badge>)}
-                        <time dateTime={i.created_at} className="ml-auto text-xs text-ink-4">{fmtDate(i.created_at, 'HH:mm')}</time>
+                        {i.type === 'video_review' && (i.reviewed
+                          ? <Badge tone="teal"><CheckCircle2 aria-hidden strokeWidth={1.8} className="h-3.5 w-3.5" />Reviewed</Badge>
+                          : <Badge tone="apricot" dot>Needs review</Badge>)}
+                        <time dateTime={i.created_at} className="ml-auto font-mono text-[0.8125rem] text-ink-3">{fmtDate(i.created_at, 'HH:mm')}</time>
                       </div>
-                      {i.summary && <p className="mt-0.5 line-clamp-2 text-sm text-ink-3 text-pretty">{i.summary}</p>}
+                      {i.summary && <p className="mt-0.5 line-clamp-2 text-[0.9375rem] text-ink-3 text-pretty">{i.summary}</p>}
                     </div>
                   </motion.li>
                 )
@@ -96,9 +107,6 @@ export default function TimelineTab({ patientId }) {
 function LevelBadge({ item }) {
   if (!item.level) return null
   if (item.type === 'movement_check') return <RiskBadge level={item.level} short />
-  if (item.type === 'lab_report') {
-    const r = LAB_RISK[item.level] || riskOf()
-    return <span className={cn('badge ring-1 ring-inset', r.bg, r.text, r.ring)}>{item.level}</span>
-  }
+  if (item.type === 'lab_report') return <LabRiskBadge risk={item.level} />
   return null
 }

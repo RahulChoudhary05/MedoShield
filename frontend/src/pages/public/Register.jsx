@@ -1,16 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Check, Mail, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import confetti from 'canvas-confetti'
-import AuthLayout from '../../features/auth/AuthLayout'
+import AuthShell, { AuthHeading } from '../../features/auth/AuthShell'
+import { FormError, PasswordChecklist, PasswordField, SelectField, TextField } from '../../features/auth/AuthFields'
 import Button from '../../components/ui/Button'
-import { Input, PasswordInput, PasswordStrength, Select } from '../../components/ui/Field'
-import { Notice } from '../../components/ui/Feedback'
 import { api } from '../../lib/api'
 import { useAuth } from '../../store/auth'
 import { cn, errorMessage } from '../../lib/utils'
@@ -30,16 +29,32 @@ const schema = z.object({
 
 const STEPS = ['Account', 'About you', 'Consent']
 const FIELDS = [['first_name', 'last_name', 'email', 'password'], ['date_of_birth', 'gender'], ['accept_terms']]
+const EASE = [0.2, 0.8, 0.2, 1]
+
+const PROMISES = [
+  'Movement checks run on your device; only body-landmark numbers are uploaded.',
+  'Doctors see your data only after you request them and they accept.',
+  'You can download or permanently delete your data any time in Settings.',
+  'MedoShield supports, but never replaces, professional medical care.',
+]
 
 export default function Register() {
   const [step, setStep] = useState(0)
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const setSession = useAuth((s) => s.setSession)
+  const stepHeading = useRef(null)
+  const firstRender = useRef(true)
   const { register, handleSubmit, trigger, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema), mode: 'onTouched', defaultValues: { gender: '', accept_terms: false },
   })
   const password = watch('password') || ''
+
+  // Move focus to the new step's heading so keyboard and screen-reader users keep their place.
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return }
+    stepHeading.current?.focus()
+  }, [step])
 
   async function next() {
     if (await trigger(FIELDS[step])) setStep((s) => s + 1)
@@ -53,7 +68,7 @@ export default function Register() {
       if (v.gender) body.gender = v.gender
       const session = await api.auth.registerPatient(body)
       setSession(session)
-      confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 }, colors: ['#3A6652', '#D08560', '#B6AAC5', '#ECD99C'] })
+      confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 }, colors: ['#234A38', '#DE9068', '#B5AC9F', '#E6D293'], disableForReducedMotion: true })
       toast.success('Your account is ready!')
       navigate('/app/check', { replace: true })
     } catch (e) {
@@ -62,72 +77,104 @@ export default function Register() {
   }
 
   return (
-    <AuthLayout>
-      <h1 className="text-[2.4rem] font-semibold leading-tight tracking-tight">Start <span className="serif-accent text-teal-600">caring</span> smarter</h1>
-      <p className="mt-2 text-ink-3">Free for patients. Takes under a minute.</p>
+    <AuthShell variant="patient">
+      <AuthHeading kicker="Create a patient account" lede="Free for patients. Takes under a minute.">
+        Start caring <span className="serif-accent">smarter</span>
+      </AuthHeading>
 
-      <ol className="mt-7 flex items-center gap-2">
+      <ol className="mt-8 grid grid-cols-3 gap-2" aria-label="Sign-up progress">
         {STEPS.map((s, i) => (
-          <li key={s} className="flex flex-1 items-center gap-2">
-            <span className={cn('grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold transition-colors', i < step ? 'bg-teal-500 text-white' : i === step ? 'bg-ink text-white' : 'bg-line text-ink-4')}>
-              {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
+          <li key={s} aria-current={i === step ? 'step' : undefined}>
+            <span className={cn('block h-[3px] rounded-full transition-colors duration-300', i <= step ? 'bg-teal-700' : 'bg-line')} aria-hidden="true" />
+            <span className={cn('mt-2 flex items-center gap-1.5 font-mono text-[0.8125rem]', i === step ? 'text-ink' : i < step ? 'text-teal-700' : 'text-ink-3')}>
+              {i < step ? <Check className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden="true" /> : <span aria-hidden="true">{i + 1}.</span>}
+              {s}
+              <span className="sr-only">{i < step ? ' (done)' : i === step ? ' (current)' : ''}</span>
             </span>
-            <span className={cn('hidden text-sm font-medium sm:inline', i === step ? 'text-ink' : 'text-ink-4')}>{s}</span>
-            {i < STEPS.length - 1 && <span className={cn('h-px flex-1', i < step ? 'bg-teal-300' : 'bg-line')} />}
           </li>
         ))}
       </ol>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-7" noValidate>
-        <AnimatePresence mode="wait">
-          <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8" noValidate aria-busy={isSubmitting}>
+        <h2 ref={stepHeading} tabIndex={-1} className="text-[1.0625rem] font-medium text-ink focus:outline-none">
+          Step {step + 1} of {STEPS.length}: {STEPS[step].toLowerCase()}
+        </h2>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: EASE }}
+            className="mt-5 space-y-5"
+          >
             {step === 0 && (
               <>
-                <div className="grid grid-cols-2 gap-3">
-                  <Input label="First name" autoComplete="given-name" error={errors.first_name?.message} {...register('first_name')} />
-                  <Input label="Last name" autoComplete="family-name" error={errors.last_name?.message} {...register('last_name')} />
+                <div className="grid grid-cols-1 gap-5 min-[400px]:grid-cols-2 min-[400px]:gap-3">
+                  <TextField label="First name" autoComplete="given-name" error={errors.first_name?.message} {...register('first_name')} />
+                  <TextField label="Last name" autoComplete="family-name" error={errors.last_name?.message} {...register('last_name')} />
                 </div>
-                <Input label="Email" type="email" icon={Mail} autoComplete="email" error={errors.email?.message} {...register('email')} />
-                <div>
-                  <PasswordInput autoComplete="new-password" error={errors.password?.message} {...register('password')} />
-                  <PasswordStrength value={password} />
-                </div>
+                <TextField label="Email" type="email" inputMode="email" autoCapitalize="none" spellCheck={false} icon={Mail} autoComplete="email" error={errors.email?.message} {...register('email')} />
+                <PasswordField autoComplete="new-password" error={errors.password?.message} describedByExtra="reg-pw-rules" {...register('password')}>
+                  <PasswordChecklist id="reg-pw-rules" value={password} />
+                </PasswordField>
               </>
             )}
             {step === 1 && (
               <>
-                <Input label="Date of birth" type="date" optional max={new Date().toISOString().slice(0, 10)} help="Helps us use age-appropriate reference ranges." error={errors.date_of_birth?.message} {...register('date_of_birth')} />
-                <Select label="Gender" optional {...register('gender')}>
+                <TextField
+                  label="Date of birth"
+                  type="date"
+                  optional
+                  autoComplete="bday"
+                  max={new Date().toISOString().slice(0, 10)}
+                  help="Helps us use age-appropriate reference ranges."
+                  error={errors.date_of_birth?.message}
+                  {...register('date_of_birth')}
+                />
+                <SelectField label="Gender" optional autoComplete="sex" {...register('gender')}>
                   <option value="">Prefer not to say</option>
                   <option value="F">Female</option>
                   <option value="M">Male</option>
                   <option value="O">Other</option>
-                </Select>
+                </SelectField>
               </>
             )}
             {step === 2 && (
               <>
-                <div className="space-y-3 rounded-3xl border border-line bg-paper p-5 text-sm text-ink-2">
-                  {[
-                    'Movement checks run on your device; only body-landmark numbers are uploaded.',
-                    'Doctors see your data only after you book them and they accept.',
-                    'You can download or permanently delete your data any time in Settings.',
-                    'MedoShield supports, but never replaces, professional medical care.',
-                  ].map((t) => <p key={t} className="flex gap-2.5"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-500" /> {t}</p>)}
+                <ul className="divide-y divide-line border-y border-line">
+                  {PROMISES.map((t, i) => (
+                    <li key={t} className="flex gap-4 py-3.5 text-[0.9375rem] leading-relaxed text-ink-2">
+                      <span className="pt-0.5 font-mono text-[0.8125rem] text-ink-3" aria-hidden="true">0{i + 1}</span>
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+                <div>
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 text-[0.9375rem] leading-relaxed text-ink-2">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 shrink-0 rounded"
+                      aria-invalid={errors.accept_terms ? true : undefined}
+                      aria-describedby={errors.accept_terms ? 'accept-terms-error' : undefined}
+                      {...register('accept_terms')}
+                    />
+                    <span>
+                      I have read the{' '}
+                      <Link to="/terms" target="_blank" className="link font-medium">terms</Link> and{' '}
+                      <Link to="/privacy" target="_blank" className="link font-medium">privacy policy</Link>, and I agree to how MedoShield handles my health data.
+                    </span>
+                  </label>
+                  {errors.accept_terms && <p id="accept-terms-error" className="mt-1.5 text-[0.8125rem] font-medium text-rose-500">{errors.accept_terms.message}</p>}
                 </div>
-                <label className="flex cursor-pointer items-start gap-3 rounded-2xl p-1 text-sm text-ink-2">
-                  <input type="checkbox" className="mt-0.5 h-5 w-5 rounded-md accent-teal-500" {...register('accept_terms')} />
-                  I understand and agree to how MedoShield handles my health data.
-                </label>
-                {errors.accept_terms && <p className="error-text">{errors.accept_terms.message}</p>}
               </>
             )}
           </motion.div>
         </AnimatePresence>
 
-        {error && <Notice tone="danger" className="mt-4">{error}</Notice>}
+        {error && <div className="mt-5"><FormError>{error}</FormError></div>}
 
-        <div className="mt-6 flex gap-3">
+        <div className="mt-7 flex gap-3">
           {step > 0 && <Button type="button" variant="outline" size="lg" icon={ArrowLeft} onClick={() => setStep((s) => s - 1)}>Back</Button>}
           {step < STEPS.length - 1
             ? <Button type="button" variant="primary" size="lg" className="flex-1" iconRight={ArrowRight} onClick={next}>Continue</Button>
@@ -135,11 +182,10 @@ export default function Register() {
         </div>
       </form>
 
-      <p className="mt-8 text-center text-sm text-ink-3">
-        Already have an account? <Link to="/login" className="font-semibold text-teal-700 hover:underline">Sign in</Link>
-        <span className="mx-2 text-line">|</span>
-        <Link to="/join/doctor" className="font-semibold text-teal-700 hover:underline">I'm a clinician</Link>
+      <p className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-[0.9375rem] text-ink-3">
+        <span>Already have an account? <Link to="/login" className="link font-medium">Sign in</Link></span>
+        <Link to="/join/doctor" className="link font-medium">I’m a clinician</Link>
       </p>
-    </AuthLayout>
+    </AuthShell>
   )
 }

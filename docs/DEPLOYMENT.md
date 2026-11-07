@@ -17,7 +17,7 @@ Visitor ──HTTPS──▶ Cloudflare (DNS · SSL · CDN · DDoS)             
 | Keep-alive | Cloudflare Worker cron (`deploy/keepalive`) | Free |
 | Backend | Render free web service (Docker) | Free |
 | Database + chat media | MongoDB Atlas M0 | Free |
-| AI | Grok (text) · Gemini (video review) | Your API credits |
+| AI | Groq (text) · Gemini (video review) | Your API credits |
 
 > Why not the backend on Cloudflare too? Workers Free allows only 10 ms CPU per request (too little for
 > NumPy/SciPy analysis and Argon2 password hashing), and Cloudflare Containers require the $5/month Workers Paid plan.
@@ -49,7 +49,7 @@ call from the keep-alive cron also touches the database — so the free cluster 
 | Key | Value |
 |---|---|
 | `MONGODB_URL` | Atlas connection string |
-| `XAI_API_KEY` | xAI console key (Grok — text features) |
+| `GROQ_API_KEY` | Groq key from console.groq.com (text AI — free tier) |
 | `GEMINI_API_KEY` | Google AI Studio key (doctor-enabled video review) |
 | `PROXY_SHARED_SECRET` | the secret from step 0 |
 | `DEMO_PASSWORD` | optional, only if `SEED_DEMO_DATA=true` |

@@ -1,438 +1,544 @@
-import { Suspense, lazy, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  ArrowRight, ArrowUpRight, BellRing, Bot, Brain, CalendarHeart, Camera, Check, ChevronDown, FileHeart, Fingerprint, HeartPulse, KeyRound,
-  LineChart, Lock, MessageSquareHeart, Pill, ScanLine, ShieldCheck, Siren, Stethoscope, Users, Waves,
+  ArrowRight, ArrowUpRight, BellRing, Camera, Check, FileText, MessageSquare, Minus, Server, Siren, Smartphone, Stethoscope,
 } from 'lucide-react'
-import GuardrailDemo from './GuardrailDemo'
-import Logo from '../../components/brand/Logo'
 import Button from '../../components/ui/Button'
-import { CountUp, Magnetic, Reveal } from '../../components/ui/motion'
+import { CountUp, Reveal } from '../../components/ui/motion'
+import { CREATOR, FAQ as FAQ_ITEMS } from '../../seo/site'
 import { cn } from '../../lib/utils'
+import GuardrailDemo from './GuardrailDemo'
+import LazyHuman from './HeroScene'
+import { Spark, StepBars, SwayPlot, TremorSpectrum, TrendLine } from './Visuals'
 
-const HumanCanvas = lazy(() => import('../../components/three/HumanModel'))
+const EASE = [0.2, 0.8, 0.2, 1]
+const VIEW = { once: true, margin: '-60px' }
 
-/* ───────────────────────── shared heading ───────────────────────── */
-function SectionHead({ eyebrow, title, accent, after, text, center = false, id }) {
+/* ───────────────────────── shared pieces ───────────────────────── */
+
+/** Editorial section header: a margin note (number + name) beside a serif heading. */
+function SectionHead({ id, n, name, title, accent, lede, children }) {
   return (
-    <Reveal className={cn('max-w-2xl', center && 'mx-auto text-center')}>
-      <span className="eyebrow">{eyebrow}</span>
-      <h2 id={id} className="mt-5 text-display-sm font-semibold sm:text-display-md text-balance">
-        {title} <span className="serif-accent">{accent}</span>{after}
-      </h2>
-      {text && <p className={cn('mt-4 text-lg leading-relaxed text-ink-3 text-pretty', center && 'mx-auto max-w-xl')}>{text}</p>}
-    </Reveal>
-  )
-}
-
-/* ───────────────────────── capability ribbon ───────────────────────── */
-export function Ribbon() {
-  const items = ['Resting tremor spectrum', 'Gait cadence', 'Step-time variability', 'Arm-swing asymmetry', 'Postural sway', 'Personal baseline', 'Lab report explainer', 'Medication adherence', 'Location-aware SOS', 'Clinician summaries']
-  return (
-    <div aria-hidden className="relative border-y border-line/60 bg-paper/50 py-4 mask-fade-x">
-      <div className="flex w-max animate-marquee gap-8 [animation-duration:55s]">
-        {[...items, ...items].map((t, i) => (
-          <span key={i} className="flex items-center gap-8 whitespace-nowrap text-[0.95rem] text-ink-3">
-            {t}<span className="h-1 w-1 rounded-full bg-teal-400" />
-          </span>
-        ))}
-      </div>
+    <div className="grid gap-6 border-t border-ink/80 pt-6 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
+      <p className="kicker flex gap-3 md:flex-col md:gap-1">
+        <span className="text-ink">§ {n}</span>
+        <span>{name}</span>
+      </p>
+      <Reveal>
+        <h2 id={id} className="h-display max-w-[20ch] text-[2.375rem] leading-[1.02] sm:text-display-md lg:text-[3.5rem]">
+          {title}{accent && <> <span className="italic text-teal-700">{accent}</span></>}
+        </h2>
+        {lede && <p className="mt-5 max-w-[60ch] text-base leading-relaxed text-ink-2 sm:text-[1.0625rem]">{lede}</p>}
+        {children}
+      </Reveal>
     </div>
   )
 }
 
-/* ───────────────────────── how it works ───────────────────────── */
-function MiniPhone() {
+function Section({ id, labelledBy, className, children }) {
   return (
-    <div className="relative mx-auto h-28 w-16 rounded-[1.1rem] border-[3px] border-ink/80 bg-cream">
-      <div className="absolute left-1/2 top-1 h-1 w-5 -translate-x-1/2 rounded-full bg-ink/70" />
-      <motion.span className="absolute inset-0 grid place-items-center font-display text-3xl font-semibold text-teal-700"
-        animate={{ opacity: [0, 1, 1, 0], scale: [0.7, 1, 1, 1.1] }} transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 0.3 }}>3</motion.span>
-    </div>
-  )
-}
-function MiniSkeleton() {
-  return (
-    <Suspense fallback={<ScanLine className="h-8 w-8 animate-pulse text-teal-300" />}>
-      <HumanCanvas pose="walk" className="h-full w-full" />
-    </Suspense>
-  )
-}
-function MiniSpectrum() {
-  const bars = [10, 14, 12, 18, 26, 62, 30, 16, 12, 10, 8, 9]
-  return (
-    <div className="mx-auto flex h-28 items-end gap-1.5">
-      {bars.map((h, i) => (
-        <motion.span key={i} className={cn('w-2.5 rounded-t-sm', i === 5 ? 'bg-apricot-400' : 'bg-teal-200')}
-          initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ delay: 0.05 * i, duration: 0.5 }} />
-      ))}
-    </div>
-  )
-}
-function MiniShare() {
-  return (
-    <div className="mx-auto w-40 space-y-2">
-      <svg viewBox="0 0 160 50" className="w-full">
-        <motion.path d="M0,38 C25,34 40,32 60,30 C85,28 100,18 125,16 C140,15 150,12 160,10" fill="none" stroke="#3A6652" strokeWidth="3" strokeLinecap="round"
-          initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.2 }} />
-      </svg>
-      <div className="flex items-center gap-2 rounded-xl border border-line/70 bg-paper px-2.5 py-1.5">
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-teal-100 text-[0.6rem] font-bold text-teal-800">SJ</span>
-        <span className="text-[0.7rem] text-ink-3">Reviewed by Dr. Johnson</span>
-        <Check className="ml-auto h-3.5 w-3.5 text-teal-600" />
-      </div>
-    </div>
+    <section id={id} aria-labelledby={labelledBy} className={cn('scroll-mt-20 py-20 sm:py-28', className)}>
+      <div className="container">{children}</div>
+    </section>
   )
 }
 
-const STEPS = [
-  { icon: Camera, title: 'Record ten seconds', text: 'Walk, stand, or hold your hands out in front of any phone or laptop camera, with live framing guidance.', visual: MiniPhone },
-  { icon: ScanLine, title: 'Pose AI, on your device', text: 'MediaPipe tracks 33 body landmarks in your browser. Frames are discarded instantly; only numbers remain.', visual: MiniSkeleton },
-  { icon: Waves, title: 'Biomarkers, not guesses', text: 'Spectral tremor analysis, cadence, symmetry, sway and rhythm, scored against references and your own baseline.', visual: MiniSpectrum },
-  { icon: Stethoscope, title: 'Your doctor sees the trend', text: 'Meaningful changes reach your care team, who can review, add notes, prescribe and message you securely.', visual: MiniShare },
+/* ───────────────────────── 2. product facts ───────────────────────── */
+
+const FACTS = [
+  { value: 33, label: 'body landmarks tracked per frame, on your own device' },
+  { text: '4–12', unit: 'Hz', label: 'tremor band, read from a Welch power spectrum' },
+  { value: 10, unit: 's', label: 'per check, with the phone you already own' },
+  { value: 5, unit: 'sessions', label: 'of good-quality data build your personal baseline' },
 ]
 
-export function HowItWorks() {
-  const ref = useRef(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 80%', 'end 60%'] })
-  const draw = useSpring(scrollYProgress, { stiffness: 90, damping: 22 })
+export function Facts() {
   return (
-    <section id="how" aria-labelledby="how-title" className="container py-24 sm:py-32">
-      <SectionHead id="how-title" center eyebrow="How it works" title="From a short clip to a" accent="clinical signal" text="Four calm steps, under a minute. No wearables and no clinic visit." />
-      <div ref={ref} className="relative mt-16">
-        <svg className="pointer-events-none absolute left-0 right-0 top-[7.5rem] hidden h-2 w-full lg:block" preserveAspectRatio="none" viewBox="0 0 100 2" aria-hidden>
-          <line x1="12" y1="1" x2="88" y2="1" stroke="#E8E0D2" strokeWidth="0.4" strokeDasharray="1 1.4" />
-          <motion.line x1="12" y1="1" x2="88" y2="1" stroke="#6E9B83" strokeWidth="0.4" style={{ pathLength: draw }} />
-        </svg>
-        <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <Reveal as="li" key={s.title} delay={i * 0.08} className="card card-interactive relative flex flex-col p-6">
-              <div className="flex items-center justify-between">
-                <span className="font-serif text-4xl italic text-teal-700/80">0{i + 1}</span>
-                <span className="icon-tile icon-teal h-10 w-10"><s.icon className="h-5 w-5" /></span>
-              </div>
-              <div className="my-6 flex h-44 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-cream/80 to-paper">
-                <s.visual />
-              </div>
-              <h3 className="text-lg font-semibold">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-3">{s.text}</p>
+    <section aria-labelledby="facts-title" className="border-b border-line">
+      <h2 id="facts-title" className="sr-only">MedoShield in four numbers</h2>
+      <div className="container">
+        <dl className="grid grid-cols-2 lg:grid-cols-4">
+          {FACTS.map((f, i) => (
+            <Reveal key={f.label} delay={i * 0.05}
+              className={cn('flex flex-col py-8 pr-4 sm:py-10', i % 2 === 1 && 'border-l border-line pl-4 sm:pl-6', i >= 2 && 'border-t border-line lg:border-t-0', i === 2 && 'lg:border-l lg:pl-6')}>
+              <dt className="order-2 mt-3 max-w-[24ch] text-[0.9375rem] leading-snug text-ink-3">{f.label}</dt>
+              <dd className="order-1 flex items-baseline gap-1.5">
+                {f.text
+                  ? <span className="font-serif text-[2.75rem] leading-none tracking-[-0.02em] text-ink sm:text-[3.5rem]">{f.text}</span>
+                  : <CountUp value={f.value} className="font-serif text-[2.75rem] font-normal leading-none text-ink sm:text-[3.5rem]" />}
+                {f.unit && <span className="font-mono text-[0.875rem] text-ink-3">{f.unit}</span>}
+              </dd>
             </Reveal>
           ))}
-        </ol>
+        </dl>
       </div>
     </section>
   )
 }
 
-/* ───────────────────────── stats ───────────────────────── */
-export function Stats() {
-  const s = [
-    { v: 33, suf: '', l: 'body landmarks tracked per frame' },
-    { v: 7, suf: '', l: 'motion biomarkers fused into one score' },
-    { v: 0, suf: ' MB', l: 'of your video ever stored' },
-    { v: 6, suf: '', l: 'independent AI safety layers' },
-  ]
-  return (
-    <section aria-label="MedoShield in numbers" className="container">
-      <div className="grid grid-cols-2 overflow-hidden rounded-3xl border border-line/70 bg-paper md:grid-cols-4">
-        {s.map((x, i) => (
-          <div key={x.l} className={cn('px-6 py-8 sm:px-8', i > 0 && 'border-line/70 md:border-l', i % 2 === 1 && 'border-l', i > 1 && 'border-t md:border-t-0')}>
-            <CountUp value={x.v} suffix={x.suf} className="text-5xl font-semibold text-ink" />
-            <p className="mt-2 text-sm text-ink-3">{x.l}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
+/* ───────────────────────── 3. how it works ───────────────────────── */
 
-/* ───────────────────────── features bento ───────────────────────── */
-function MiniChat() {
-  const lines = [
-    { me: true, text: 'pain' },
-    { me: false, text: 'Thanks for telling me. Where exactly is the pain, and how strong is it from 1 to 10?' },
-  ]
+const STEPS = [
+  {
+    n: '01', title: 'Record ten seconds',
+    text: 'Prop your phone up, step back, then walk, stand still or hold your hands out. MediaPipe Pose finds 33 body landmarks in the browser while the camera feed stays on the phone.',
+    meta: 'Camera → landmarks, on device',
+  },
+  {
+    n: '02', title: 'Measured on the landmarks',
+    text: 'Wrist motion becomes a frequency spectrum, so tremor shows up as a peak in the 4–12 Hz band. Ankle and trunk signals give cadence, left/right symmetry and sway.',
+    meta: 'Landmarks → biomarkers',
+  },
+  {
+    n: '03', title: 'Compared with you, shared with your doctor',
+    text: 'Each check is scored against a baseline built from your first five good sessions, then the trend goes to the clinician you chose.',
+    meta: 'Biomarkers → trend → clinician',
+  },
+]
+
+function StepVisual({ n }) {
+  if (n === '01') return <LazyHuman pose="walk" className="aspect-[4/3] w-full" label="Loading the 3D walker" />
+  if (n === '02') {
+    return (
+      <div className="flex aspect-[4/3] flex-col justify-center gap-2 px-4">
+        <TremorSpectrum axis={false} label={false} />
+        <p className="font-mono text-[0.8125rem] text-ink-3"><span className="text-apricot-600">peak 5.4 Hz</span> inside 4–12 Hz</p>
+      </div>
+    )
+  }
   return (
-    <div className="mt-6 space-y-2.5">
-      {lines.map((l, i) => (
-        <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.25 + i * 0.5 }}
-          className={cn('max-w-[85%] rounded-2xl px-3.5 py-2 text-sm', l.me ? 'ml-auto rounded-br-md bg-teal-700 text-white' : 'rounded-bl-md border border-line bg-paper text-ink-2')}>
-          {l.text}
-        </motion.div>
-      ))}
-      <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.3 }} className="flex flex-wrap gap-1.5 pt-1">
-        {['Head', 'Back', 'Joints', 'Chest'].map((c) => <span key={c} className="rounded-full border border-line bg-paper px-2.5 py-1 text-xs text-ink-2">{c}</span>)}
-      </motion.div>
+    <div className="flex aspect-[4/3] flex-col justify-center gap-2 px-4">
+      <TrendLine axis={false} />
+      <p className="font-mono text-[0.8125rem] text-ink-3">baseline band · <span className="text-apricot-600">latest check flagged</span></p>
     </div>
   )
 }
 
-function FeatureCard({ icon: Icon, title, text, tone = 'teal', className, children }) {
+export function HowItWorks() {
   return (
-    <Reveal className={cn('group', className)}>
-      <div className="card card-interactive relative h-full overflow-hidden p-7">
-        <span className={cn('icon-tile h-11 w-11', tone === 'clay' ? 'icon-coral' : 'icon-teal')}><Icon className="h-5 w-5" /></span>
-        <h3 className="mt-5 text-xl font-semibold">{title}</h3>
-        <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-3">{text}</p>
-        {children}
-        <ArrowUpRight className="absolute right-6 top-6 h-5 w-5 text-ink-4 opacity-0 transition duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
-      </div>
-    </Reveal>
-  )
-}
-
-export function Features() {
-  return (
-    <section id="features" aria-labelledby="features-title" className="py-24 sm:py-32">
-      <div className="container">
-        <SectionHead id="features-title" eyebrow="Everything in one calm place" title="Built for the" accent="days between" after=" appointments" />
-        <div className="mt-12 grid gap-4 md:grid-cols-6">
-          <Reveal className="group md:col-span-4">
-            <div className="card relative h-full overflow-hidden p-7 sm:p-9">
-              <span className="icon-tile icon-teal h-11 w-11"><LineChart className="h-5 w-5" /></span>
-              <h3 className="mt-5 text-2xl font-semibold sm:text-[1.75rem]">A motor index that learns you</h3>
-              <p className="mt-2 max-w-md text-ink-3">Seven biomarkers fused into one score, with a personal baseline built from your first checks — so subtle change becomes visible weeks earlier.</p>
-              <svg viewBox="0 0 600 180" className="relative mt-8 w-full" role="img" aria-label="Example motor index trend with an emerging tremor flagged">
-                <defs><linearGradient id="bento-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3A6652" stopOpacity=".18" /><stop offset="1" stopColor="#3A6652" stopOpacity="0" /></linearGradient></defs>
-                {[40, 80, 120, 160].map((y) => <line key={y} x1="0" x2="600" y1={y} y2={y} stroke="#F0E9DD" strokeDasharray="3 6" />)}
-                <motion.path d="M0,60 C60,55 90,48 140,52 C200,58 230,44 290,50 C350,56 380,70 430,88 C480,106 520,112 600,128" fill="none" stroke="#3A6652" strokeWidth="3" strokeLinecap="round"
-                  initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 2, ease: 'easeInOut' }} />
-                <path d="M0,60 C60,55 90,48 140,52 C200,58 230,44 290,50 C350,56 380,70 430,88 C480,106 520,112 600,128 L600,180 L0,180Z" fill="url(#bento-a)" />
-                <motion.g initial={{ opacity: 0, y: 6 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 1.6 }}>
-                  <circle cx="430" cy="88" r="7" fill="#FFFDF9" stroke="#C06D48" strokeWidth="3" />
-                  <rect x="344" y="30" rx="10" width="172" height="34" fill="#FFFDF9" stroke="#E8E0D2" />
-                  <text x="430" y="52" textAnchor="middle" fill="#1E1C19" fontSize="13" fontFamily="Geist Variable">Tremor emerging · flagged</text>
-                </motion.g>
-              </svg>
+    <Section id="how" labelledBy="how-title">
+      <SectionHead
+        id="how-title" n="01" name="How it works"
+        title="Three steps," accent="no wearables."
+        lede="A check takes less time than finding a pen. Everything that touches the camera happens on your phone; what leaves it is a list of coordinates."
+      />
+      <ol className="mt-12 grid gap-10 md:mt-16 md:grid-cols-3 md:gap-6 lg:gap-8">
+        {STEPS.map((s, i) => (
+          <motion.li key={s.n} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={VIEW}
+            transition={{ duration: 0.6, delay: i * 0.06, ease: EASE }} className="flex flex-col">
+            <div className="overflow-hidden rounded-xl border border-line bg-paper">
+              <StepVisual n={s.n} />
             </div>
-          </Reveal>
-          <FeatureCard className="md:col-span-2" icon={Bot} title="Medo, a careful companion" text="Asks before it advises. One-word questions get focused follow-ups, never essays.">
-            <MiniChat />
-          </FeatureCard>
-          <FeatureCard className="md:col-span-2" icon={FileHeart} title="Lab reports, explained" text="Upload a PDF and see values, ranges and next steps in plain language." />
-          <FeatureCard className="md:col-span-2" icon={Pill} title="A medication plan that cares" text="Gentle reminders, adherence tracking, and OTC guidance screened for allergies and interactions." />
-          <FeatureCard className="md:col-span-2" icon={Siren} tone="clay" title="Hold-to-SOS" text="One long press shares your live location with your emergency contact and care team." />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-/* ───────────────────────── security ───────────────────────── */
-export function Security() {
-  const items = [
-    { icon: KeyRound, t: 'Argon2id passwords', d: 'Memory-hard hashing, legacy hashes upgraded on login, breach-pattern policy.' },
-    { icon: Fingerprint, t: 'Rotating sessions', d: '15-minute tokens in memory plus an httpOnly refresh cookie with reuse detection.' },
-    { icon: Users, t: 'Object-level access', d: 'Doctors only see patients who invited them. Every record view is audited.' },
-    { icon: Lock, t: 'Hardened API', d: 'Strict schemas, rate limits, lockouts, CSP and HSTS, magic-byte upload checks.' },
-  ]
-  return (
-    <section id="security" aria-labelledby="security-title" className="relative py-24 sm:py-32">
-      <div className="container grid items-center gap-12 lg:grid-cols-2">
-        <div>
-          <SectionHead id="security-title" eyebrow="Security & AI safety" title="Health data deserves" accent="defence in depth"
-            text="Every AI message passes six independent guardrails, and the platform follows the OWASP API Security Top 10 end to end." />
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {items.map((it, i) => (
-              <Reveal key={it.t} delay={i * 0.06}>
-                <div className="h-full rounded-2xl border border-line/70 bg-paper p-5">
-                  <it.icon className="h-5 w-5 text-teal-700" />
-                  <p className="mt-3 font-semibold">{it.t}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink-3">{it.d}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-        <Reveal delay={0.1}><GuardrailDemo /></Reveal>
-      </div>
-    </section>
-  )
-}
-
-/* ───────────────────────── clinicians ───────────────────────── */
-export function Clinicians() {
-  const points = [
-    [BellRing, 'Risk-sorted triage', 'Patients with meaningful change rise to the top.'],
-    [Brain, 'AI clinical summary', 'Structured, source-labelled, never a diagnosis.'],
-    [MessageSquareHeart, 'Secure messaging', 'Text, voice notes and files per care link.'],
-    [CalendarHeart, 'Appointment flow', 'Accepting a request opens the care link.'],
-  ]
-  return (
-    <section id="clinicians" aria-labelledby="clinicians-title" className="container py-24 sm:py-32">
-      <div className="card card-tint-teal relative overflow-hidden p-7 sm:p-12">
-        <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.05fr]">
-          <div>
-            <SectionHead id="clinicians-title" eyebrow="For clinicians" title="Remote monitoring that" accent="respects your time"
-              text="A triage-first panel, patient charts with biomarker trends, AI summaries you can verify, secure messaging and one-click prescribing." />
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button to="/join/doctor" size="lg" variant="primary" iconRight={ArrowUpRight}>Join as a clinician</Button>
-              <Button to="/login" size="lg" variant="outline">Clinician sign in</Button>
+            <div className="mt-6 flex items-baseline gap-4 border-t border-line pt-4">
+              <span className="font-mono text-[0.875rem] text-ink-4">{s.n}</span>
+              <div>
+                <h3 className="text-[1.1875rem] font-medium leading-snug">{s.title}</h3>
+                <p className="mt-2 text-base leading-relaxed text-ink-2">{s.text}</p>
+                <p className="mt-3 font-mono text-[0.8125rem] text-ink-3">{s.meta}</p>
+              </div>
             </div>
-          </div>
-          <div className="space-y-3">
-            <figure className="relative overflow-hidden rounded-3xl border border-line/70 bg-cream">
-              <img src="https://images.unsplash.com/photo-1758691462858-f1286e5daf40?w=1100&q=78&auto=format&fit=crop" width="1100" height="619" loading="lazy" decoding="async"
-                alt="A doctor reviewing results with an older patient at a clinic desk" className="aspect-[16/9] w-full object-cover" />
-              <figcaption className="absolute bottom-3 left-3 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-medium text-ink-2 backdrop-blur">Trends replace guesswork at every visit</figcaption>
-            </figure>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {points.map(([I, t, d]) => (
-                <li key={t} className="rounded-2xl border border-line/70 bg-paper p-4">
-                  <I className="h-5 w-5 text-teal-700" />
-                  <p className="mt-2 font-semibold">{t}</p>
-                  <p className="text-sm text-ink-3">{d}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
+          </motion.li>
+        ))}
+      </ol>
+    </Section>
   )
 }
 
-/* ───────────────────────── everyday life ───────────────────────── */
-export function Everyday() {
-  return (
-    <section aria-labelledby="everyday-title" className="container py-24 sm:py-28">
-      <div className="grid items-center gap-10 lg:grid-cols-2">
-        <Reveal>
-          <figure className="relative overflow-hidden rounded-[2rem] border border-line/70 bg-cream shadow-soft">
-            <img src="https://images.unsplash.com/photo-1758691031979-6128d4029604?w=1100&q=78&auto=format&fit=crop" width="1100" height="619" loading="lazy" decoding="async"
-              alt="A smiling older woman checking her health results on a smartphone at home" className="aspect-[4/3] w-full object-cover" />
-            <div className="glass absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-2xl px-4 py-3 sm:right-auto">
-              <span className="icon-tile icon-teal h-9 w-9"><HeartPulse className="h-4 w-4" /></span>
-              <div><p className="text-sm font-semibold">Check complete · 9:02 am</p><p className="text-xs text-ink-3">Steady compared with your baseline</p></div>
-            </div>
-          </figure>
-        </Reveal>
-        <div>
-          <SectionHead id="everyday-title" eyebrow="Made for everyday life" title="Ten seconds, from" accent="your living room"
-            text="No wearables, no lab, no learning curve. Prop up a phone, follow the on-screen guide, and MedoShield does the rest — gently reminding you of medicines and flagging changes to your care team." />
-          <Reveal delay={0.1}>
-            <dl className="mt-8 grid max-w-lg grid-cols-3 gap-4">
-              {[['10 s', 'per check'], ['0', 'devices to buy'], ['24/7', 'SOS & reminders']].map(([v, l]) => (
-                <div key={l} className="border-l border-line pl-4"><dt className="num text-3xl font-semibold text-ink">{v}</dt><dd className="mt-1 text-sm text-ink-3">{l}</dd></div>
-              ))}
-            </dl>
-          </Reveal>
-        </div>
-      </div>
-    </section>
-  )
-}
+/* ───────────────────────── 4. the science ───────────────────────── */
 
-/* ───────────────────────── FAQ ───────────────────────── */
-const FAQS = [
-  ['Is my video uploaded anywhere?', 'No. For movement checks, pose tracking runs in your browser and only 33 body-landmark coordinates per frame are sent for analysis. The video itself never leaves your device. AI video review is a separate, doctor-enabled option, and even then the video is analysed in memory and discarded.'],
-  ['Is MedoShield a diagnostic device?', 'No. It is a monitoring and education tool that helps you and your doctor notice change over time. It supports, but never replaces, assessment by a qualified clinician.'],
-  ['Who can see my results?', 'Only you, and doctors whose appointment request you made and who accepted it. Every time a doctor opens your record it is written to an audit log, and you can end a care link at any time.'],
-  ['What does the motor index measure?', 'It fuses tremor strength in the 4–12 Hz band, movement speed, left/right symmetry, trunk sway, step rhythm, arm-swing balance and cadence into a single 0–100 score. Higher is steadier.'],
-  ['How does Medo, the AI assistant, stay safe?', 'Every message passes six guardrails: text normalisation, emergency triage, injection scanning, data isolation, a leak-detecting canary and output validation. Emergencies always get immediate, fixed safety guidance.'],
-  ['Can I download or delete my data?', 'Yes. Settings lets you export everything as JSON, or permanently delete your account and all associated records.'],
+const MEASURES = [
+  {
+    key: 'tremor', title: 'Rest and postural tremor',
+    text: 'Wrist positions are resampled to an even rate and turned into a power spectrum. Voluntary movement lives below 3 Hz and is ignored; landmark jitter sets a noise floor, so only a genuine peak in the 4–12 Hz band counts.',
+    spec: [['Landmarks', '15, 16 · wrists'], ['Method', 'Welch PSD, noise-corrected'], ['Output', 'peak Hz, tremor index 0–1']],
+    visual: <TremorSpectrum />,
+  },
+  {
+    key: 'gait', title: 'Gait cadence and symmetry',
+    text: 'Steps are found from the forward–back separation of the ankles. Their timing gives cadence and step-time variability; comparing steps that end on the left with those that end on the right gives symmetry.',
+    spec: [['Landmarks', '27, 28 · ankles; 15, 16 · arm swing'], ['Method', 'step peaks, step-time ratio'], ['Output', 'spm, variability, symmetry']],
+    visual: <StepBars />,
+  },
+  {
+    key: 'sway', title: 'Balance sway',
+    text: 'While you stand still, the side-to-side wobble of the trunk is tracked with its slow drift removed. More sway than your own baseline is the signal, not a population threshold.',
+    spec: [['Landmarks', '11, 12 · shoulders; 23, 24 · hips'], ['Method', 'detrended lateral trunk motion'], ['Output', 'sway, compared with baseline']],
+    visual: <SwayPlot />,
+  },
 ]
 
-export function FAQ() {
-  const [open, setOpen] = useState(0)
-  return (
-    <section id="faq" aria-labelledby="faq-title" className="container py-24 sm:py-28">
-      <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
-        <div>
-          <SectionHead id="faq-title" eyebrow="Questions" title="Good questions," accent="clear answers" text="Everything people usually ask before their first check." />
-          <Reveal delay={0.1}><Button to="/register" variant="outline" className="mt-8" iconRight={ArrowRight}>Try it yourself</Button></Reveal>
-        </div>
-        <ul className="divide-y divide-line/70 rounded-3xl border border-line/70 bg-paper">
-          {FAQS.map(([q, a], i) => {
-            const isOpen = open === i
-            return (
-              <li key={q}>
-                <h3>
-                  <button className="flex w-full items-center justify-between gap-6 px-6 py-5 text-left text-[1.05rem] font-medium text-ink transition hover:text-teal-800"
-                    aria-expanded={isOpen} aria-controls={`faq-${i}`} onClick={() => setOpen(isOpen ? -1 : i)}>
-                    {q}
-                    <ChevronDown className={cn('h-5 w-5 shrink-0 text-ink-4 transition-transform duration-300', isOpen && 'rotate-180 text-teal-700')} />
-                  </button>
-                </h3>
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div id={`faq-${i}`} role="region" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }} className="overflow-hidden">
-                      <p className="px-6 pb-6 leading-relaxed text-ink-3">{a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-    </section>
-  )
-}
+const LIMITS = [
+  ['It is not a diagnosis.', 'A change in your trend is a reason to talk to your clinician, not a conclusion about a condition.'],
+  ['A phone is not a gait lab.', 'Lighting, framing and loose clothing move landmarks. A signal-quality gate rejects noisy recordings instead of guessing.'],
+  ['The first five checks calibrate.', 'Until your baseline exists, results are labelled calibrating rather than scored.'],
+  ['Frame rate sets a ceiling.', 'At 30 frames per second the fastest frequency a camera can see is 15 Hz, so the top of the band is read with less certainty.'],
+]
 
-/* ───────────────────────── final CTA ───────────────────────── */
-export function FinalCTA() {
+export function Science() {
   return (
-    <section aria-labelledby="cta-title" className="container pb-24">
-      <Reveal className="relative overflow-hidden rounded-[2.5rem] border border-line/70 bg-paper shadow-soft">
-        <div className="grid items-stretch md:grid-cols-[1.2fr_0.8fr]">
-          <div className="px-7 py-14 sm:px-14">
-            <span className="eyebrow">Free for patients</span>
-            <h2 id="cta-title" className="mt-5 text-display-sm font-semibold sm:text-display-md text-balance">Ten seconds today. <span className="serif-accent">Peace of mind</span> tomorrow.</h2>
-            <ul className="mt-6 space-y-2 text-ink-3">
-              {['Your first check in under a minute', 'Video stays on your device', 'Share trends with your doctor only when you choose'].map((t) => (
-                <li key={t} className="flex items-center gap-2.5"><Check className="h-4 w-4 text-teal-600" /> {t}</li>
-              ))}
-            </ul>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Magnetic><Button to="/register" size="lg" variant="primary" iconRight={ArrowRight}>Create my account</Button></Magnetic>
-              <Button to="/login" size="lg" variant="outline">I already have one</Button>
-            </div>
-          </div>
-          <div className="relative hidden min-h-[320px] md:block">
-            <img src="https://images.unsplash.com/photo-1764072955216-547f731d176d?w=900&q=78&auto=format&fit=crop" alt="An older man taking a calm morning walk by a lake" loading="lazy" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-paper via-paper/10 to-transparent" />
-          </div>
-        </div>
-      </Reveal>
-    </section>
-  )
-}
-
-/* ───────────────────────── footer ───────────────────────── */
-export function Footer() {
-  const cols = [
-    ['Product', [['How it works', '#how'], ['Features', '#features'], ['Security', '#security'], ['FAQ', '#faq']]],
-    ['Get started', [['Create an account', '/register'], ['Join as a clinician', '/join/doctor'], ['Sign in', '/login']]],
-    ['Trust', [['On-device pose AI', '#how'], ['AI guardrails', '#security'], ['Data export & deletion', '#faq']]],
-  ]
-  return (
-    <footer className="border-t border-line/70 bg-paper/60">
-      <div className="container grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div>
-          <Logo tagline />
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-3">Privacy-first neuro-motor monitoring. A ten-second check, measured on your device, shared with your doctor.</p>
-          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-xs text-ink-3"><ShieldCheck className="h-3.5 w-3.5 text-teal-700" /> OWASP API Top-10 hardened</p>
-        </div>
-        {cols.map(([title, links]) => (
-          <nav key={title} aria-label={title}>
-            <p className="text-xs font-semibold uppercase tracking-[.16em] text-ink-4">{title}</p>
-            <ul className="mt-4 space-y-2.5 text-sm">
-              {links.map(([l, h]) => (
-                <li key={l}>{h.startsWith('#') ? <a href={h} className="text-ink-2 hover:text-teal-800">{l}</a> : <Link to={h} className="text-ink-2 hover:text-teal-800">{l}</Link>}</li>
-              ))}
-            </ul>
-          </nav>
+    <Section id="science" labelledBy="science-title" className="bg-paper/60">
+      <SectionHead
+        id="science-title" n="02" name="The science"
+        title="What a check measures," accent="and how."
+        lede="Three movement signals, each computed from named landmarks with a stated method. Each result is compared with your own baseline (a median and spread from your first sessions), never with a stranger’s average."
+      />
+      <div className="mt-12 divide-y divide-line border-y border-line md:mt-16">
+        {MEASURES.map((m) => (
+          <article key={m.key} aria-labelledby={`m-${m.key}`} className="grid gap-8 py-10 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,1fr)_minmax(0,0.9fr)]">
+            <h3 id={`m-${m.key}`} className="font-serif text-[1.75rem] font-normal leading-tight">{m.title}</h3>
+            <Reveal>
+              <p className="max-w-[56ch] text-base leading-relaxed text-ink-2">{m.text}</p>
+              <dl className="mt-6 grid gap-x-6 gap-y-2 font-mono text-[0.8125rem] sm:grid-cols-[6rem_1fr]">
+                {m.spec.map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt className="text-ink-4">{k}</dt>
+                    <dd className="text-ink-2">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Reveal>
+            <Reveal delay={0.08} className="rounded-xl border border-line bg-canvas p-4 sm:p-5 md:col-start-2 lg:col-start-auto">
+              {m.visual}
+            </Reveal>
+          </article>
         ))}
       </div>
-      <div className="border-t border-line/70">
-        <div className="container flex flex-col gap-3 py-6 text-xs text-ink-4 md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} MedoShield AI · Not a diagnostic medical device. In an emergency, call your local emergency number.</p>
-          <p>Photography: Unsplash</p>
+
+      <Reveal className="mt-12 grid gap-6 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <h3 className="font-mono text-[0.875rem] font-medium text-ink">Honest limits</h3>
+        <ul className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
+          {LIMITS.map(([t, d]) => (
+            <li key={t} className="border-l border-line pl-4">
+              <p className="font-medium text-ink">{t}</p>
+              <p className="mt-1 text-[0.9375rem] leading-relaxed text-ink-3">{d}</p>
+            </li>
+          ))}
+        </ul>
+      </Reveal>
+    </Section>
+  )
+}
+
+/* ───────────────────────── 5. privacy by design ───────────────────────── */
+
+const FLOW = [
+  { icon: Smartphone, title: 'Your phone', lines: ['camera frames', 'MediaPipe Pose, in the browser'], boundary: true },
+  { icon: null, title: '33 landmarks / frame', lines: ['x, y, z, visibility', 'no pixels, no face image'] },
+  { icon: Server, title: 'MedoShield server', lines: ['biomarkers, baseline', 'risk level and trend'] },
+  { icon: Stethoscope, title: 'The doctor you chose', lines: ['the trend, not the video', 'access you can revoke'] },
+]
+
+function FlowDiagram() {
+  return (
+    <figure className="mt-12 md:mt-16">
+      <ol className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] md:items-stretch md:gap-0">
+        {FLOW.map((f, i) => (
+          <li key={f.title} className="contents">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={VIEW} transition={{ delay: i * 0.12, duration: 0.5, ease: EASE }}
+              className={cn(
+                'relative rounded-xl p-4 sm:p-5',
+                f.boundary ? 'border border-dashed border-ink-4 bg-paper' : f.icon ? 'border border-line bg-paper' : 'border border-teal-200 bg-teal-50/70',
+              )}
+            >
+              <div className="flex items-center gap-2.5">
+                {f.icon ? <f.icon className="h-[1.125rem] w-[1.125rem] text-ink-2" strokeWidth={1.8} aria-hidden="true" />
+                  : <span className="font-mono text-[0.8125rem] text-teal-800" aria-hidden="true">[x,y,z]</span>}
+                <p className="text-[0.9375rem] font-medium text-ink">{f.title}</p>
+              </div>
+              <ul className="mt-3 space-y-1 font-mono text-[0.8125rem] text-ink-3">
+                {f.lines.map((l) => <li key={l}>{l}</li>)}
+              </ul>
+              {f.boundary && (
+                <p className="mt-4 border-t border-dashed border-line pt-3 font-mono text-[0.8125rem] text-apricot-600">raw video stops here</p>
+              )}
+            </motion.div>
+            {i < FLOW.length - 1 && (
+              <span aria-hidden="true" className="flex items-center justify-center py-1 md:px-2 md:py-0">
+                <motion.span initial={{ scaleY: 0 }} whileInView={{ scaleY: 1 }} viewport={VIEW} transition={{ delay: i * 0.12 + 0.2, duration: 0.4, ease: EASE }}
+                  className="block h-5 w-px origin-top bg-ink-4 md:hidden" />
+                <motion.span initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={VIEW} transition={{ delay: i * 0.12 + 0.2, duration: 0.4, ease: EASE }}
+                  className="hidden h-px w-6 origin-left bg-ink-4 md:block lg:w-8" />
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+      <figcaption className="mt-4 font-mono text-[0.8125rem] text-ink-3">Fig. 2. What leaves the phone during a movement check.</figcaption>
+    </figure>
+  )
+}
+
+const STAYS = ['Camera video of your movement check', 'Individual camera frames', 'Your surroundings, room and face image']
+const LEAVES = ['33 landmark coordinates per frame', 'Derived biomarkers, quality score and risk level', 'What you add yourself: medications, lab reports, messages']
+const SEES = ['You, always', 'Doctors you sent a request to who accepted it', 'Nobody else; you can revoke access at any time']
+
+function Ledger({ title, items, icon: Icon, tone }) {
+  return (
+    <div>
+      <h4 className="font-mono text-[0.875rem] font-medium text-ink">{title}</h4>
+      <ul className="mt-3 divide-y divide-line border-y border-line">
+        {items.map((t) => (
+          <li key={t} className="flex gap-3 py-2.5 text-[0.9375rem] text-ink-2">
+            <Icon className={cn('mt-1 h-4 w-4 shrink-0', tone)} strokeWidth={1.8} aria-hidden="true" />
+            {t}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+export function Privacy() {
+  return (
+    <Section id="privacy" labelledBy="privacy-title">
+      <SectionHead
+        id="privacy-title" n="03" name="Privacy by design"
+        title="Your video" accent="never leaves the phone."
+        lede="Privacy here is an architecture decision, not a settings page. Pose estimation runs on the device, so the server only ever receives numbers that describe how joints moved."
+      />
+      <FlowDiagram />
+
+      <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
+        <div>
+          <h3 className="font-serif text-[1.75rem] font-normal leading-tight">What is stored, and what is not</h3>
+          <div className="mt-8 grid gap-8">
+            <Ledger title="Stays on your phone" items={STAYS} icon={Minus} tone="text-ink-4" />
+            <Ledger title="Sent and stored, encrypted in transit" items={LEAVES} icon={Check} tone="text-teal-700" />
+            <Ledger title="Who can see your results" items={SEES} icon={Check} tone="text-teal-700" />
+          </div>
+        </div>
+        <div>
+          <h3 className="font-serif text-[1.75rem] font-normal leading-tight">The assistant is guarded too</h3>
+          <p className="mt-3 max-w-[56ch] text-base leading-relaxed text-ink-2">
+            Ask Medo answers health questions inside six server-side layers. Pick a message to see where it stops.
+          </p>
+          <GuardrailDemo className="mt-6" />
         </div>
       </div>
-    </footer>
+    </Section>
+  )
+}
+
+/* ───────────────────────── around the check ───────────────────────── */
+
+const TOOLS = [
+  { icon: MessageSquare, title: 'Ask Medo', text: 'A medical assistant with prompt-injection guardrails and emergency triage that answers in plain language.' },
+  { icon: BellRing, title: 'Medication reminders', text: 'Doses on a schedule, with a history of what was taken and what was missed.' },
+  { icon: FileText, title: 'Lab-report explainer', text: 'Upload a report and get each value explained in plain language against its reference range.' },
+  { icon: Siren, title: 'SOS', text: 'Press and hold to share your location with your emergency contact and care team.' },
+]
+
+export function Everyday() {
+  return (
+    <Section id="everyday" labelledBy="everyday-title" className="pt-0 sm:pt-0">
+      <div className="grid gap-6 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <p className="kicker">Around the check</p>
+        <div>
+          <h2 id="everyday-title" className="h-display text-[2rem] leading-tight sm:text-display-sm">The rest of the week, in the same app.</h2>
+          <ul className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
+            {TOOLS.map((t, i) => (
+              <motion.li key={t.title} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={VIEW} transition={{ delay: i * 0.05, duration: 0.5 }}
+                className="bg-canvas p-6">
+                <t.icon className="h-5 w-5 text-teal-700" strokeWidth={1.8} aria-hidden="true" />
+                <h3 className="mt-4 text-[1.0625rem] font-medium">{t.title}</h3>
+                <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-3">{t.text}</p>
+              </motion.li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Section>
+  )
+}
+
+/* ───────────────────────── 6. for clinicians ───────────────────────── */
+
+const RISK = {
+  low: ['Low', 'bg-teal-50 text-teal-800'],
+  medium: ['Medium', 'bg-butter-50 text-[#6E5716]'],
+  high: ['High', 'bg-rose-50 text-rose-600'],
+  calibrating: ['Calibrating', 'bg-lilac-50 text-lilac-600'],
+}
+const PATIENTS = [
+  { name: 'A. Mehta', age: 67, last: 'Today, 08:12', hz: '5.4', sym: '91%', risk: 'high', spark: [72, 73, 72, 71, 69, 68, 66, 64], tone: 'ember' },
+  { name: 'R. Iyer', age: 72, last: 'Yesterday', hz: '—', sym: '96%', risk: 'low', spark: [70, 71, 70, 72, 71, 72, 73, 72] },
+  { name: 'S. Kaur', age: 58, last: '2 days ago', hz: '6.1', sym: '93%', risk: 'medium', spark: [74, 73, 73, 71, 72, 70, 70, 69] },
+  { name: 'D. Thomas', age: 63, last: '3 days ago', hz: '—', sym: '—', risk: 'calibrating', spark: [70, 72, 69, 71], tone: 'stone' },
+]
+
+function DoctorPreview() {
+  return (
+    <figure className="card overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
+        <p className="text-[0.9375rem] font-medium">Clinic overview</p>
+        <p className="font-mono text-[0.8125rem] text-ink-4">sample data</p>
+      </div>
+      <dl className="grid grid-cols-3 divide-x divide-line border-b border-line">
+        {[['Patients', '12'], ['Flagged this week', '2'], ['Checks to review', '5']].map(([k, v]) => (
+          <div key={k} className="px-4 py-4 sm:px-5">
+            <dt className="text-[0.8125rem] leading-tight text-ink-3">{k}</dt>
+            <dd className="mt-1 font-serif text-[2rem] leading-none text-ink">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <table className="w-full text-left text-[0.875rem]">
+        <caption className="sr-only">Sample patient list with latest movement check results</caption>
+        <thead>
+          <tr className="border-b border-line font-mono text-[0.8125rem] text-ink-4">
+            <th scope="col" className="px-5 py-2.5 font-normal">Patient</th>
+            <th scope="col" className="hidden px-3 py-2.5 font-normal sm:table-cell">Tremor</th>
+            <th scope="col" className="hidden px-3 py-2.5 font-normal md:table-cell">Symmetry</th>
+            <th scope="col" className="hidden px-3 py-2.5 font-normal sm:table-cell">30 days</th>
+            <th scope="col" className="px-5 py-2.5 text-right font-normal">Risk</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {PATIENTS.map((p) => (
+            <tr key={p.name}>
+              <td className="px-5 py-3">
+                <p className="font-medium text-ink">{p.name} <span className="font-normal text-ink-4">· {p.age}</span></p>
+                <p className="text-[0.8125rem] text-ink-3">{p.last}</p>
+              </td>
+              <td className={cn('hidden px-3 py-3 font-mono tabular-nums sm:table-cell', p.risk === 'high' ? 'text-apricot-600' : 'text-ink-2')}>{p.hz === '—' ? '—' : `${p.hz} Hz`}</td>
+              <td className="hidden px-3 py-3 font-mono tabular-nums text-ink-2 md:table-cell">{p.sym}</td>
+              <td className="hidden px-3 py-3 sm:table-cell"><Spark values={p.spark} tone={p.tone} /></td>
+              <td className="px-5 py-3 text-right">
+                <span className={cn('badge', RISK[p.risk][1])}>{RISK[p.risk][0]}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="border-t border-line bg-cream/50 px-5 py-4">
+        <p className="font-mono text-[0.8125rem] text-ink-3">AI summary · A. Mehta</p>
+        <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-ink-2">
+          Rest tremor peak at 5.4 Hz on the last three checks, up from no measurable peak at baseline. Gait symmetry down four points. Recording quality good.
+        </p>
+      </div>
+      <figcaption className="sr-only">Illustration of the MedoShield clinician dashboard with sample data.</figcaption>
+    </figure>
+  )
+}
+
+const CLINICIAN_POINTS = [
+  'Every patient’s movement trend between visits, measured against their own baseline',
+  'Flagged checks first, each with its recording-quality score',
+  'AI-assisted summaries you can read in under a minute, never a diagnosis',
+  'Appointment requests and secure messaging in one place',
+]
+
+export function Clinicians() {
+  return (
+    <Section id="clinicians" labelledBy="clinicians-title" className="bg-paper/60">
+      <SectionHead
+        id="clinicians-title" n="04" name="For clinicians"
+        title="The months between visits," accent="on one screen."
+        lede="Patients invite you. You see objective tremor, gait and balance trends, the checks that moved, and how trustworthy each recording was."
+      />
+      <div className="mt-12 grid gap-10 md:mt-16 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-14">
+        <Reveal><DoctorPreview /></Reveal>
+        <Reveal delay={0.08} className="flex flex-col">
+          <h3 className="font-serif text-[1.75rem] font-normal leading-tight">Built for a ten-minute appointment</h3>
+          <ul className="mt-6 divide-y divide-line border-y border-line">
+            {CLINICIAN_POINTS.map((t) => (
+              <li key={t} className="flex gap-3 py-3.5 text-base text-ink-2">
+                <Check className="mt-1 h-4 w-4 shrink-0 text-teal-700" strokeWidth={1.8} aria-hidden="true" />{t}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button to="/join/doctor" variant="brand" size="lg" iconRight={ArrowRight}>Join as a clinician</Button>
+          </div>
+          <p className="mt-4 text-[0.875rem] text-ink-3">Patients share data with you only after you accept their request.</p>
+        </Reveal>
+      </div>
+    </Section>
+  )
+}
+
+/* ───────────────────────── 7. FAQ ───────────────────────── */
+
+export function FAQ() {
+  return (
+    <Section id="faq" labelledBy="faq-title">
+      <SectionHead id="faq-title" n="05" name="Questions" title="Plain answers." />
+      <dl className="mt-12 border-b border-line md:mt-16">
+        {FAQ_ITEMS.map(([q, a], i) => (
+          <motion.div key={q} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={VIEW} transition={{ delay: i * 0.04, duration: 0.5, ease: EASE }}
+            className="grid gap-2 border-t border-line py-6 md:grid-cols-[11rem_minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <span className="hidden font-mono text-[0.8125rem] text-ink-4 md:block" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <dt className="text-[1.0625rem] font-medium leading-snug text-ink">{q}</dt>
+            <dd className="max-w-[60ch] text-base leading-relaxed text-ink-2">{a}</dd>
+          </motion.div>
+        ))}
+      </dl>
+    </Section>
+  )
+}
+
+/* ───────────────────────── 8. built by ───────────────────────── */
+
+export function BuiltBy() {
+  const facts = [['Role', CREATOR.role], ['Work', CREATOR.work], ['Education', CREATOR.education], ['Patent', CREATOR.patent.replace(/^Patent:\s*/, '')]]
+  return (
+    <section aria-labelledby="builtby-title" className="border-y border-line bg-paper py-20 sm:py-24">
+      <div className="container grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+        <Reveal>
+          <p className="kicker">The maker</p>
+          <h2 id="builtby-title" className="h-display mt-4 text-[2.375rem] leading-[1.02] sm:text-display-md">
+            Designed and built end to end by <span className="italic text-teal-700">{CREATOR.name}.</span>
+          </h2>
+          <p className="mt-5 max-w-[56ch] text-base leading-relaxed text-ink-2">
+            {CREATOR.summary} MedoShield covers the whole stack: on-device pose estimation, signal processing, a guarded LLM assistant, a clinician dashboard and the deployment behind them.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button to="/about" variant="primary" size="lg" iconRight={ArrowRight}>Read the build story</Button>
+            <Button href={CREATOR.github} target="_blank" rel="noopener noreferrer me" variant="outline" size="lg" iconRight={ArrowUpRight}>View code on GitHub</Button>
+          </div>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <dl className="divide-y divide-line border-y border-line">
+            {facts.map(([k, v]) => (
+              <div key={k} className="grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-6">
+                <dt className="font-mono text-[0.8125rem] text-ink-4">{k}</dt>
+                <dd className="text-[0.9375rem] text-ink-2">{v}</dd>
+              </div>
+            ))}
+            <div className="grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-6">
+              <dt className="font-mono text-[0.8125rem] text-ink-4">Stack</dt>
+              <dd className="font-mono text-[0.8125rem] leading-relaxed text-ink-2">{CREATOR.skills.join(' · ')}</dd>
+            </div>
+          </dl>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────── 9. final CTA ───────────────────────── */
+
+export function FinalCTA() {
+  return (
+    <section aria-labelledby="cta-title" className="py-24 sm:py-32">
+      <div className="container">
+        <Reveal className="grid gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end">
+          <div>
+            <p className="kicker flex items-center gap-2"><Camera className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /> Ten seconds, phone camera</p>
+            <h2 id="cta-title" className="h-display mt-5 text-[2.75rem] leading-[0.98] sm:text-display-lg">
+              Take today’s check. <span className="italic text-teal-700">Bring a clearer trend</span> to your next appointment.
+            </h2>
+          </div>
+          <div>
+            <div className="flex flex-wrap gap-3">
+              <Button to="/register" variant="primary" size="lg" iconRight={ArrowRight}>Start a free check</Button>
+              <Button to="/join/doctor" variant="outline" size="lg" icon={Stethoscope}>For clinicians</Button>
+            </div>
+            <p className="mt-5 max-w-[44ch] text-[0.875rem] leading-relaxed text-ink-3">
+              Free for patients. A monitoring and education tool, not a diagnostic device. In an emergency call 112 / 108.
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </section>
   )
 }

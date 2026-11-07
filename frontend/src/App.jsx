@@ -4,15 +4,18 @@ import { motion } from 'framer-motion'
 import { bootstrapSession } from './lib/api'
 import { homeFor, useAuth } from './store/auth'
 import { LogoMark } from './components/brand/Logo'
-import AppShell from './components/layout/AppShell'
 import RouteMeta from './components/layout/RouteMeta'
 import ErrorBoundary from './components/layout/ErrorBoundary'
+import Landing from './pages/public/Landing'
 
-const Landing = lazy(() => import('./pages/public/Landing'))
+const AppShell = lazy(() => import('./components/layout/AppShell'))
 const Login = lazy(() => import('./pages/public/Login'))
 const Register = lazy(() => import('./pages/public/Register'))
 const DoctorJoin = lazy(() => import('./pages/public/DoctorJoin'))
 const NotFound = lazy(() => import('./pages/public/NotFound'))
+const About = lazy(() => import('./pages/public/About'))
+const Privacy = lazy(() => import('./pages/public/Privacy'))
+const Terms = lazy(() => import('./pages/public/Terms'))
 
 const Dashboard = lazy(() => import('./pages/patient/Dashboard'))
 const MovementCheck = lazy(() => import('./pages/patient/MovementCheck'))
@@ -37,9 +40,9 @@ export function Splash() {
   return (
     <div className="grid min-h-dvh place-items-center bg-canvas">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
-        <LogoMark size={56} animated />
-        <div className="h-1 w-24 overflow-hidden rounded-full bg-line">
-          <motion.div className="h-full w-1/2 rounded-full bg-teal-500" animate={{ x: ['-100%', '200%'] }} transition={{ repeat: Infinity, duration: 1.1, ease: 'easeInOut' }} />
+        <LogoMark size={44} animated />
+        <div className="h-[2px] w-20 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="Loading">
+          <motion.div className="h-full w-1/2 rounded-full bg-teal-700" animate={{ x: ['-100%', '200%'] }} transition={{ repeat: Infinity, duration: 1.2, ease: [0.65, 0, 0.35, 1] }} />
         </div>
       </motion.div>
     </div>
@@ -57,7 +60,7 @@ function RequireRole({ role, children }) {
 
 function GuestOnly({ children }) {
   const { status, role } = useAuth()
-  if (status === 'loading') return <Splash />
+  // Render the form immediately; only redirect once a session is confirmed.
   if (status === 'authenticated') return <Navigate to={homeFor(role)} replace />
   return children
 }
@@ -73,6 +76,9 @@ export default function App() {
       <RouteMeta />
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
         <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
         <Route path="/join/doctor" element={<GuestOnly><DoctorJoin /></GuestOnly>} />

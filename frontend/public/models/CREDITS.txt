@@ -1,0 +1,8 @@
+3D human models used by MedoShield AI (optimised: WebP textures, meshopt geometry, unused clips removed)
+
+human-male.glb   — Ready Player Me sample avatar, as distributed in the three.js examples
+human-female.glb — Adobe Mixamo "Michelle", as distributed in the three.js examples
+human-gait.glb   — motion-captured "walk" and "idle" clips from the Mixamo "X Bot", as distributed in the three.js examples
+
+Source: https://github.com/mrdoob/three.js/tree/r180/examples/models/gltf
+Clinical outfits, world-space retargeting, gait track, landmarks and rendering code: Rahul Choudhary

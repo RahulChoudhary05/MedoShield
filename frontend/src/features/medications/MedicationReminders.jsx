@@ -57,7 +57,7 @@ export default function MedicationReminders() {
             try {
               await api.meds.log({ medication_name: name, time_slot: slot, status })
               qc.invalidateQueries({ queryKey: ['meds'] })
-              toast.success(status === 'taken' ? `${name} logged — nice work!` : `${name} skipped`)
+              toast.success(status === 'taken' ? `${name} logged — nice work` : `${name} skipped`)
             } catch {
               toast.error('Could not log this dose')
             }
@@ -65,7 +65,7 @@ export default function MedicationReminders() {
           toast(`${name} is due`, {
             id: key,
             description: `Scheduled for ${slot}`,
-            icon: <Pill className="h-4 w-4 text-teal-600" />,
+            icon: <Pill className="h-4 w-4 text-teal-700" strokeWidth={1.8} aria-hidden />,
             duration: 60_000,
             action: { label: 'Taken', onClick: () => log('taken') },
             cancel: { label: 'Skip', onClick: () => log('skipped') },

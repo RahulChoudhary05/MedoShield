@@ -3,14 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { motion } from 'framer-motion'
-import { ArrowRight, Mail, PlayCircle, Stethoscope, UserRound } from 'lucide-react'
+import { ArrowRight, Mail, Stethoscope, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
-import AuthLayout from '../../features/auth/AuthLayout'
+import AuthShell, { AuthHeading } from '../../features/auth/AuthShell'
+import { FormError, PasswordField, RoleToggle, TextField } from '../../features/auth/AuthFields'
 import Button from '../../components/ui/Button'
-import Segmented from '../../components/ui/Segmented'
-import { Input, PasswordInput } from '../../components/ui/Field'
-import { Notice } from '../../components/ui/Feedback'
 import { api } from '../../lib/api'
 import { homeFor, useAuth } from '../../store/auth'
 import { errorMessage } from '../../lib/utils'
@@ -52,41 +49,50 @@ export default function Login() {
   }
 
   return (
-    <AuthLayout variant={role}>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-[2.4rem] font-semibold leading-tight tracking-tight">Welcome <span className="serif-accent text-teal-600">back</span></h1>
-        <p className="mt-2 text-ink-3">Sign in to continue your monitoring.</p>
+    <AuthShell variant={role}>
+      <AuthHeading kicker="Sign in" lede="Continue your monitoring where you left off.">
+        Welcome <span className="serif-accent">back</span>
+      </AuthHeading>
 
-        <Segmented className="mt-7 w-full [&>button]:flex-1 [&>button]:justify-center" value={role} onChange={setRole}
-          options={[{ value: 'patient', label: 'Patient', icon: UserRound }, { value: 'doctor', label: 'Clinician', icon: Stethoscope }]} />
+      <RoleToggle className="mt-8" value={role} onChange={setRole} />
 
-        <form onSubmit={handleSubmit((v) => onSubmit(v))} className="mt-6 space-y-4" noValidate>
-          <Input label="Email" type="email" autoComplete="email" icon={Mail} placeholder="you@example.com" error={errors.email?.message} {...register('email')} />
-          <PasswordInput autoComplete="current-password" error={errors.password?.message} {...register('password')} />
-          {error && <Notice tone="danger">{error}</Notice>}
-          <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} iconRight={ArrowRight}>
-            Sign in as {role === 'doctor' ? 'clinician' : 'patient'}
-          </Button>
-        </form>
+      <form onSubmit={handleSubmit((v) => onSubmit(v))} className="mt-6 space-y-5" noValidate aria-busy={isSubmitting}>
+        <TextField
+          label="Email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          icon={Mail}
+          placeholder="you@example.com"
+          error={errors.email?.message}
+          {...register('email')}
+        />
+        <PasswordField autoComplete="current-password" error={errors.password?.message} {...register('password')} />
+        <FormError>{error}</FormError>
+        <Button type="submit" variant="primary" size="lg" className="w-full" loading={isSubmitting} iconRight={ArrowRight}>
+          Sign in as {role === 'doctor' ? 'clinician' : 'patient'}
+        </Button>
+      </form>
 
-        {DEMO_PASSWORD && (
-          <div className="mt-6 rounded-3xl border border-dashed border-teal-200 bg-teal-50/50 p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold text-teal-800"><PlayCircle className="h-4 w-4" /> Explore with demo data</p>
-            <p className="mt-1 text-xs text-teal-700/80">Pre-filled accounts with 5 weeks of synthetic movement data.</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" size="sm" icon={UserRound} onClick={() => demo('patient')} disabled={isSubmitting}>Demo patient</Button>
-              <Button type="button" variant="outline" size="sm" icon={Stethoscope} onClick={() => demo('doctor')} disabled={isSubmitting}>Demo doctor</Button>
-            </div>
+      {DEMO_PASSWORD && (
+        <section aria-labelledby="demo-heading" className="mt-8 border-t border-line pt-6">
+          <h2 id="demo-heading" className="text-[0.9375rem] font-medium text-ink">Explore with demo data</h2>
+          <p className="mt-1 text-[0.875rem] text-ink-3">Two pre-filled accounts with five weeks of synthetic movement data.</p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" size="lg" className="text-[0.9375rem]" icon={UserRound} onClick={() => demo('patient')} disabled={isSubmitting}>Demo patient</Button>
+            <Button type="button" variant="outline" size="lg" className="text-[0.9375rem]" icon={Stethoscope} onClick={() => demo('doctor')} disabled={isSubmitting}>Demo doctor</Button>
           </div>
-        )}
+        </section>
+      )}
 
-        <p className="mt-8 text-center text-sm text-ink-3">
-          New here?{' '}
-          {role === 'doctor'
-            ? <Link to="/join/doctor" className="font-semibold text-teal-700 hover:underline">Join as a clinician</Link>
-            : <Link to="/register" className="font-semibold text-teal-700 hover:underline">Create a patient account</Link>}
-        </p>
-      </motion.div>
-    </AuthLayout>
+      <p className="mt-8 text-[0.9375rem] text-ink-3">
+        New here?{' '}
+        {role === 'doctor'
+          ? <Link to="/join/doctor" className="link font-medium">Join as a clinician</Link>
+          : <Link to="/register" className="link font-medium">Create a patient account</Link>}
+      </p>
+    </AuthShell>
   )
 }

@@ -1,12 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { ArrowUp } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { cn } from '../../../lib/utils'
 
 export const MAX_CHARS = 2000
 
 /** Auto-growing message box: Enter sends, Shift+Enter adds a newline. */
-const Composer = forwardRef(function Composer({ onSend, disabled, placeholder = 'Ask Medo anything about your health…', reserveRight = false }, ref) {
+const Composer = forwardRef(function Composer({ onSend, disabled, placeholder = 'Ask Medo about your health…', reserveRight = false }, ref) {
   const [value, setValue] = useState('')
   const taRef = useRef(null)
   useImperativeHandle(ref, () => ({ focus: () => taRef.current?.focus(), set: (v) => setValue(v) }))
@@ -30,7 +29,7 @@ const Composer = forwardRef(function Composer({ onSend, disabled, placeholder = 
   const near = value.length > MAX_CHARS * 0.9
   return (
     <div className={cn(reserveRight && 'pr-16 lg:pr-[4.5rem]')}>
-      <div className="flex items-end gap-2 rounded-[1.6rem] border border-line bg-paper p-2 pl-4 shadow-soft transition focus-within:border-teal-300 focus-within:ring-4 focus-within:ring-teal-50">
+      <div className="flex items-end gap-2 rounded-xl border border-line bg-paper p-1.5 pl-3.5 transition duration-150 focus-within:border-teal-500 focus-within:ring-[3px] focus-within:ring-teal-100">
         <label htmlFor="medo-composer" className="sr-only">Message Medo</label>
         <textarea
           id="medo-composer"
@@ -46,25 +45,24 @@ const Composer = forwardRef(function Composer({ onSend, disabled, placeholder = 
             }
           }}
           placeholder={placeholder}
-          className="max-h-[180px] min-h-[2.5rem] flex-1 resize-none bg-transparent py-2 text-[0.9375rem] leading-relaxed text-ink outline-none placeholder:text-ink-4"
+          className="max-h-[180px] min-h-[2.75rem] flex-1 resize-none bg-transparent py-2.5 text-base leading-relaxed text-ink outline-none placeholder:text-ink-4"
         />
-        <motion.button
+        <button
           type="button"
-          whileTap={{ scale: 0.92 }}
           onClick={submit}
           disabled={!canSend}
           aria-label="Send message"
           className={cn(
-            'grid h-10 w-10 shrink-0 place-items-center rounded-full transition-all duration-200',
-            canSend ? 'bg-teal-700 text-white shadow-glow hover:brightness-110' : 'bg-cream text-ink-4',
+            'grid h-11 w-11 shrink-0 place-items-center rounded-lg transition duration-150 active:scale-[.97]',
+            canSend ? 'bg-ink text-paper hover:bg-teal-800' : 'bg-cream text-ink-4',
           )}
         >
-          <ArrowUp className="h-[18px] w-[18px]" strokeWidth={2.4} />
-        </motion.button>
+          <ArrowUp className="h-[18px] w-[18px]" strokeWidth={1.8} />
+        </button>
       </div>
-      <div className="mt-1.5 flex items-center justify-between gap-3 px-2 text-[0.7rem] text-ink-4">
-        <span className="hidden sm:inline">Enter to send · Shift + Enter for a new line</span>
-        <span className={cn('ml-auto tabular-nums', near && 'font-semibold text-apricot-500', value.length >= MAX_CHARS && 'text-rose-500')} aria-live="polite">
+      <div className="mt-1.5 flex items-center justify-between gap-3 px-1 text-[0.8125rem] text-ink-3">
+        <span className="hidden font-mono sm:inline">Enter to send · Shift + Enter for a new line</span>
+        <span className={cn('ml-auto font-mono tabular-nums', near && 'text-apricot-600', value.length >= MAX_CHARS && 'text-rose-500')} aria-live="polite">
           {value.length}/{MAX_CHARS}
         </span>
       </div>

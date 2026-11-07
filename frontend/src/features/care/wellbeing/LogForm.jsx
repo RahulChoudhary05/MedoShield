@@ -1,21 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Footprints, HeartPulse, Moon, NotebookPen, Ruler, Scale } from 'lucide-react'
-import { Card, CardHeader } from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { Input } from '../../../components/ui/Field'
 import { api } from '../../../lib/api'
 import { cn, errorMessage } from '../../../lib/utils'
 import { readLocal, todayISO, writeLocal } from '../shared'
+import { Section } from '../kit'
 
 const MOODS = [
-  { max: 2, emoji: '😌', label: 'Calm' },
-  { max: 4, emoji: '🙂', label: 'Mostly fine' },
-  { max: 6, emoji: '😐', label: 'Some pressure' },
-  { max: 8, emoji: '😟', label: 'Stressed' },
-  { max: 10, emoji: '😣', label: 'Overwhelmed' },
+  { max: 2, label: 'Calm' },
+  { max: 4, label: 'Mostly fine' },
+  { max: 6, label: 'Some pressure' },
+  { max: 8, label: 'Stressed' },
+  { max: 10, label: 'Overwhelmed' },
 ]
 const moodOf = (v) => MOODS.find((m) => v <= m.max) || MOODS[4]
 const HEIGHT_KEY = 'medo:height-cm'
@@ -33,8 +32,8 @@ export function bmiFrom(weight, heightCm) {
 
 export function bmiBand(b) {
   if (b == null) return null
-  if (b < 18.5) return { label: 'Under range', cls: 'text-teal-500' }
-  if (b < 25) return { label: 'Healthy range', cls: 'text-teal-600' }
+  if (b < 18.5) return { label: 'Under range', cls: 'text-apricot-600' }
+  if (b < 25) return { label: 'Healthy range', cls: 'text-teal-700' }
   if (b < 30) return { label: 'Above range', cls: 'text-apricot-600' }
   return { label: 'Well above range', cls: 'text-apricot-600' }
 }
@@ -103,8 +102,7 @@ export default function LogForm({ records = [] }) {
   }
 
   return (
-    <Card>
-      <CardHeader icon={NotebookPen} tone="apricot" title="Daily check-in" subtitle={existing ? 'Editing your log for this day' : 'Takes less than a minute'} />
+    <Section id="daily-checkin" icon={NotebookPen} kicker={existing ? 'Editing this day' : 'Under a minute'} title="Daily check-in">
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Input label="Date" type="date" value={f.date} max={todayISO()} onChange={(e) => {
           const date = e.target.value
@@ -119,18 +117,16 @@ export default function LogForm({ records = [] }) {
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <label htmlFor="stress" className="label mb-0">Stress today</label>
-            <span className="text-sm text-ink-3"><span className="num font-semibold text-ink">{f.stress_level}</span>/10</span>
+            <span className="font-mono text-[0.8125rem] text-ink-3"><span className="num text-[1rem] text-ink">{f.stress_level}</span>/10 · <span className="text-ink-2">{mood.label}</span></span>
           </div>
-          <div className="tile flex items-center gap-4 px-4 py-3">
-            <AnimatePresence mode="wait">
-              <motion.span key={mood.emoji} initial={{ scale: 0.6, rotate: -12, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} className="text-3xl leading-none" aria-hidden>
-                {mood.emoji}
-              </motion.span>
-            </AnimatePresence>
-            <div className="min-w-0 flex-1">
-              <input id="stress" type="range" min={1} max={10} step={1} value={f.stress_level} onChange={set('stress_level')} className="w-full" aria-valuetext={`${f.stress_level} of 10, ${mood.label}`} />
-              <div className="flex justify-between text-[0.7rem] text-ink-4"><span>Calm</span><span className="font-medium text-ink-2">{mood.label}</span><span>Very high</span></div>
+          <div className="rounded-lg border border-line bg-paper px-3 py-3">
+            <div className="mb-2 flex gap-1" aria-hidden>
+              {Array.from({ length: 10 }).map((_, i) => (
+                <span key={i} className={cn('h-1.5 flex-1 rounded-full transition-colors duration-150', i < Number(f.stress_level) ? (Number(f.stress_level) >= 7 ? 'bg-apricot-500' : 'bg-teal-700') : 'bg-cream')} />
+              ))}
             </div>
+            <input id="stress" type="range" min={1} max={10} step={1} value={f.stress_level} onChange={set('stress_level')} className="h-11 w-full" aria-valuetext={`${f.stress_level} of 10, ${mood.label}`} />
+            <div className="flex justify-between font-mono text-[0.8125rem] text-ink-3"><span>Calm</span><span>Very high</span></div>
           </div>
         </div>
 
@@ -141,23 +137,22 @@ export default function LogForm({ records = [] }) {
 
         <div className="grid grid-cols-2 items-end gap-3">
           <Input label="Height (cm)" icon={Ruler} type="number" inputMode="numeric" min={50} max={250} placeholder="170" value={height} onChange={(e) => setHeight(e.target.value)} error={errors.height} />
-          <div className={cn('tile flex h-12 items-center justify-between px-4', !bmi && 'opacity-70')}>
-            <span className="text-xs font-medium text-ink-3">BMI</span>
+          <div className={cn('flex h-11 items-center justify-between rounded-lg border border-line bg-cream/50 px-3.5', !bmi && 'text-ink-3')} aria-live="polite">
+            <span className="kicker">BMI</span>
             <span className="text-right leading-tight">
-              <span className="num block font-semibold text-ink">{bmi ?? '—'}</span>
-              {band && <span className={cn('block text-[0.65rem] font-medium', band.cls)}>{band.label}</span>}
+              <span className="num block text-ink">{bmi ?? '—'}</span>
             </span>
           </div>
         </div>
-        <p className="-mt-2 text-xs text-ink-4">Height stays on this device — we only save the BMI.</p>
+        <p className="-mt-2 text-[0.8125rem] text-ink-3">{band ? <span className={band.cls}>{band.label}. </span> : null}Height stays on this device — we only save the BMI.</p>
 
         <div>
-          <label htmlFor="wb-notes" className="label">Notes <span className="font-normal text-ink-4">(optional)</span></label>
+          <label htmlFor="wb-notes" className="label">Notes <span className="font-normal text-ink-3">(optional)</span></label>
           <textarea id="wb-notes" className="input min-h-[80px]" maxLength={300} placeholder="Anything worth remembering — a fall, a great walk, a bad night…" value={f.notes} onChange={set('notes')} />
         </div>
 
         <Button variant="brand" type="submit" loading={save.isPending} className="w-full">{existing ? 'Update this day' : 'Save check-in'}</Button>
       </form>
-    </Card>
+    </Section>
   )
 }

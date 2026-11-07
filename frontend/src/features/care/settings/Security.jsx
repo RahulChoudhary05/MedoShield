@@ -3,15 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { KeyRound, Laptop, LogOut, ShieldCheck, Smartphone } from 'lucide-react'
-import { Card, CardHeader } from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import { PasswordInput, PasswordStrength } from '../../../components/ui/Field'
-import { Skeleton } from '../../../components/ui/Feedback'
-import { Badge } from '../../../components/ui/Badge'
 import { api } from '../../../lib/api'
 import { errorMessage, fmtRelative } from '../../../lib/utils'
 import { useAuth } from '../../../store/auth'
 import { ConfirmDialog, SectionLabel } from '../shared'
+import { Section } from '../kit'
 
 function describeAgent(ua = '') {
   const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser'
@@ -64,8 +62,7 @@ export default function Security() {
 
   const list = sessions.data?.sessions || []
   return (
-    <Card id="security" as="section" className="scroll-mt-24">
-      <CardHeader icon={ShieldCheck} tone="teal" title="Security" subtitle="Password and signed-in devices" />
+    <Section id="security" icon={ShieldCheck} kicker="Password and signed-in devices" title="Security">
       <div className="grid gap-8 lg:grid-cols-2">
         <form onSubmit={submit} className="space-y-4" noValidate>
           <SectionLabel>Change password</SectionLabel>
@@ -75,34 +72,34 @@ export default function Security() {
             {pw.next && <PasswordStrength value={pw.next} />}
           </div>
           <PasswordInput label="Confirm new password" value={pw.confirm} onChange={(e) => setPw((s) => ({ ...s, confirm: e.target.value }))} error={errors.confirm} autoComplete="new-password" maxLength={128} />
-          <Button variant="primary" size="sm" type="submit" icon={KeyRound} loading={change.isPending}>Update password</Button>
+          <Button variant="primary" type="submit" icon={KeyRound} loading={change.isPending}>Update password</Button>
         </form>
 
         <div>
           <SectionLabel>Active sessions</SectionLabel>
           {sessions.isLoading ? (
-            <div className="space-y-2">{[0, 1].map((i) => <Skeleton key={i} className="h-16" />)}</div>
+            <div className="space-y-2" aria-busy="true">{[0, 1].map((i) => <div key={i} className="skeleton h-14" />)}</div>
           ) : sessions.isError ? (
-            <p className="text-sm text-ink-3">Couldn’t load sessions. <button className="font-medium text-teal-600 hover:underline" onClick={() => sessions.refetch()}>Retry</button></p>
+            <p role="alert" className="text-[0.9375rem] text-rose-600">Couldn’t load sessions. <button className="min-h-[44px] font-medium text-teal-700 hover:underline" onClick={() => sessions.refetch()}>Reload sessions</button></p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-line border-y border-line">
               {list.map((s, i) => {
                 const a = describeAgent(s.user_agent)
                 const Icon = a.mobile ? Smartphone : Laptop
                 return (
-                  <li key={`${s.created_at}-${i}`} className="tile flex items-center gap-3 px-3.5 py-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-paper text-ink-3 ring-1 ring-line"><Icon className="h-4 w-4" /></span>
+                  <li key={`${s.created_at}-${i}`} className="flex items-center gap-3 py-3">
+                    <Icon className="h-4 w-4 shrink-0 text-ink-3" strokeWidth={1.8} aria-hidden />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-ink">{a.label}</p>
-                      <p className="truncate text-xs text-ink-4">Signed in {fmtRelative(s.created_at)}{s.ip ? ` · ${s.ip}` : ''}</p>
+                      <p className="truncate font-medium text-ink">{a.label}</p>
+                      <p className="truncate font-mono text-[0.8125rem] text-ink-3">Signed in {fmtRelative(s.created_at)}{s.ip ? ` · ${s.ip}` : ''}</p>
                     </div>
-                    {s.current && <Badge tone="teal" dot>This device</Badge>}
+                    {s.current && <span className="inline-flex items-center gap-1.5 font-mono text-[0.8125rem] text-teal-700"><span className="h-1.5 w-1.5 rounded-full bg-teal-600" aria-hidden />This device</span>}
                   </li>
                 )
               })}
             </ul>
           )}
-          <Button variant="outline" size="sm" icon={LogOut} className="mt-4 text-rose-600" onClick={() => setConfirmAll(true)}>Sign out everywhere</Button>
+          <Button variant="outline" icon={LogOut} className="mt-4 text-rose-600" onClick={() => setConfirmAll(true)}>Sign out everywhere</Button>
         </div>
       </div>
 
@@ -115,8 +112,8 @@ export default function Security() {
         loading={logoutAll.isPending}
         onConfirm={() => logoutAll.mutate()}
       >
-        <p className="text-sm text-ink-3">Useful if you’ve lost a phone or used a shared computer.</p>
+        <p className="text-[0.9375rem] text-ink-3">Useful if you’ve lost a phone or used a shared computer.</p>
       </ConfirmDialog>
-    </Card>
+    </Section>
   )
 }

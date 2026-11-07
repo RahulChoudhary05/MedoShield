@@ -31,7 +31,8 @@ GEMINI_OK = FakeResp(200, {"candidates": [{"content": {"parts": [{"text": "gemin
 
 @pytest.fixture
 def keys(monkeypatch):
-    def set_keys(xai="", gemini="", provider="auto"):
+    def set_keys(xai="", gemini="", provider="auto", groq=""):
+        monkeypatch.setattr(settings, "GROQ_API_KEY", groq)
         monkeypatch.setattr(settings, "XAI_API_KEY", xai)
         monkeypatch.setattr(settings, "GEMINI_API_KEY", gemini)
         monkeypatch.setattr(settings, "LLM_PROVIDER", provider)
@@ -84,3 +85,26 @@ async def test_no_keys_means_rules_engine(monkeypatch, keys):
     keys()
     assert not llm.available() and llm.model_name() == "rules-engine"
     assert await llm.generate(system="s", contents=[llm.user_text("x")]) == ""
+
+
+GROQ_OK = FakeResp(200, {"choices": [{"message": {"content": "groq says hi"}}]})
+
+
+@pytest.mark.asyncio
+async def test_groq_preferred_with_schema(monkeypatch, keys):
+    keys(groq="gsk_test", xai="xai-test", gemini="g-test")
+    fake = install(monkeypatch, {"api.groq.com": GROQ_OK, "api.x.ai": GROK_OK, "generativelanguage": GEMINI_OK})
+    out = await llm.generate(system="sys", contents=[llm.user_text("hi")], json_schema={"type": "OBJECT", "properties": {"a": {"type": "STRING"}}})
+    assert out == "groq says hi" and llm.primary() == "groq"
+    url, body, headers = fake.calls[0]
+    assert url.endswith("/openai/v1/chat/completions") and headers["Authorization"] == "Bearer gsk_test"
+    assert body["messages"][0] == {"role": "system", "content": "sys"}
+    assert body["response_format"]["type"] == "json_schema" and body["response_format"]["json_schema"]["schema"]["type"] == "object"
+
+
+@pytest.mark.asyncio
+async def test_groq_video_goes_to_gemini(monkeypatch, keys):
+    keys(groq="gsk_test", gemini="g-test")
+    install(monkeypatch, {"api.groq.com": GROQ_OK, "generativelanguage": GEMINI_OK})
+    parts = [{"text": "x"}, llm.inline_media("video/mp4", "AAAA")]
+    assert await llm.generate(system="s", contents=[{"role": "user", "parts": parts}]) == "gemini says hi"

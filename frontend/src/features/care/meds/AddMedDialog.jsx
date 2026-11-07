@@ -80,8 +80,8 @@ export default function AddMedDialog({ open, onOpenChange }) {
       size="lg"
       footer={
         <>
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button variant="brand" size="sm" type="submit" form="add-med-form" loading={add.isPending}>Save medicine</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="brand" type="submit" form="add-med-form" loading={add.isPending}>Save medicine</Button>
         </>
       }
     >
@@ -97,17 +97,17 @@ export default function AddMedDialog({ open, onOpenChange }) {
           <div className="flex flex-wrap items-center gap-2">
             <AnimatePresence initial={false}>
               {f.time_slots.map((t, i) => (
-                <motion.div key={i} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="flex items-center gap-1 rounded-full border border-line bg-cream py-1 pl-3 pr-1">
-                  <input type="time" value={t} onChange={(e) => setSlot(i, e.target.value)} aria-label={`Reminder time ${i + 1}`} className="bg-transparent text-sm font-medium text-ink outline-none" />
-                  <button type="button" onClick={() => setF((s) => ({ ...s, time_slots: s.time_slots.filter((_, j) => j !== i) }))} className="grid h-7 w-7 place-items-center rounded-full text-ink-4 hover:bg-ink/5 hover:text-ink" aria-label={`Remove time ${t}`}>
-                    <X className="h-3.5 w-3.5" />
+                <motion.div key={i} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="flex h-11 items-center gap-1 rounded-lg border border-line bg-paper pl-3 pr-1">
+                  <input type="time" value={t} onChange={(e) => setSlot(i, e.target.value)} aria-label={`Reminder time ${i + 1}`} className="num bg-transparent text-base text-ink outline-none" />
+                  <button type="button" onClick={() => setF((s) => ({ ...s, time_slots: s.time_slots.filter((_, j) => j !== i) }))} className="grid h-9 w-9 place-items-center rounded-md text-ink-3 hover:bg-ink/5 hover:text-ink" aria-label={`Remove time ${t}`}>
+                    <X className="h-4 w-4" strokeWidth={1.8} />
                   </button>
                 </motion.div>
               ))}
             </AnimatePresence>
             {f.time_slots.length < 8 && (
-              <button type="button" onClick={() => setF((s) => ({ ...s, time_slots: [...s.time_slots, '12:00'] }))} className="chip">
-                <Plus className="h-3.5 w-3.5" /> Add time
+              <button type="button" onClick={() => setF((s) => ({ ...s, time_slots: [...s.time_slots, '12:00'] }))} className="btn btn-outline h-11 px-4 text-[0.9375rem]">
+                <Plus className="h-4 w-4" strokeWidth={1.8} aria-hidden /> Add a time
               </button>
             )}
           </div>

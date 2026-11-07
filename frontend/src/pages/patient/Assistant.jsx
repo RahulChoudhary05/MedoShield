@@ -5,9 +5,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Info, Lock, PanelLeft, SquarePen, X } from 'lucide-react'
 import { api } from '../../lib/api'
-import { cn, errorMessage } from '../../lib/utils'
+import { errorMessage } from '../../lib/utils'
 import { useAuth } from '../../store/auth'
-import { Spinner } from '../../components/ui/Feedback'
+import { PageHeader } from '../../components/ui/motion'
 import ConversationRail from '../../features/care/assistant/ConversationRail'
 import { AssistantMessage, MedoAvatar, TypingMessage, UserMessage } from '../../features/care/assistant/MessageItem'
 import Composer from '../../features/care/assistant/Composer'
@@ -143,9 +143,17 @@ export default function Assistant() {
 
   return (
     <div>
-      <div className="relative grid h-[calc(100dvh-12.75rem)] min-h-[520px] overflow-hidden rounded-3xl border border-line/80 bg-paper shadow-soft lg:h-[calc(100dvh-9.5rem)] lg:grid-cols-[17.5rem_1fr]">
+      <PageHeader
+        kicker="Assistant · guarded"
+        title="Ask"
+        accent="Medo"
+        description="General health information in plain words. Emergencies, unsafe requests and anything that needs a doctor are routed by a safety layer first."
+        className="mb-5 pb-5"
+      />
+
+      <div className="relative grid h-[calc(100dvh-20rem)] min-h-[480px] overflow-hidden rounded-3xl border border-line bg-paper lg:h-[calc(100dvh-17.5rem)] lg:grid-cols-[17.5rem_1fr]">
         {/* Desktop rail */}
-        <aside className="hidden min-h-0 border-r border-line/70 bg-cream/60 lg:block" aria-label="Conversations">{rail}</aside>
+        <aside className="hidden min-h-0 border-r border-line bg-cream/50 lg:block" aria-label="Conversations">{rail}</aside>
 
         {/* Mobile rail drawer */}
         <AnimatePresence>
@@ -153,20 +161,20 @@ export default function Assistant() {
             <>
               <motion.button
                 aria-label="Close conversations"
-                className="absolute inset-0 z-20 bg-ink/20 backdrop-blur-[2px] lg:hidden"
+                className="absolute inset-0 z-20 bg-ink/20 lg:hidden"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setRailOpen(false)}
               />
               <motion.aside
                 aria-label="Conversations"
-                className="absolute inset-y-0 left-0 z-30 flex w-[85%] max-w-[20rem] flex-col border-r border-line bg-paper shadow-lift lg:hidden"
+                className="absolute inset-y-0 left-0 z-30 flex w-[85%] max-w-[20rem] flex-col border-r border-line bg-canvas shadow-float lg:hidden"
                 initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-                transition={{ type: 'spring', stiffness: 380, damping: 36 }}
+                transition={{ duration: 0.24, ease: [0.65, 0, 0.35, 1] }}
               >
                 <div className="flex items-center justify-between px-4 pt-3">
-                  <p className="font-display font-semibold">Your chats</p>
-                  <button onClick={() => setRailOpen(false)} className="grid h-9 w-9 place-items-center rounded-full text-ink-3 hover:bg-ink/5" aria-label="Close">
-                    <X className="h-4 w-4" />
+                  <p className="font-medium text-ink">Your chats</p>
+                  <button onClick={() => setRailOpen(false)} className="grid h-11 w-11 place-items-center rounded-lg text-ink-3 hover:bg-ink/5" aria-label="Close conversations">
+                    <X className="h-4 w-4" strokeWidth={1.8} />
                   </button>
                 </div>
                 <div className="min-h-0 flex-1">{rail}</div>
@@ -177,26 +185,30 @@ export default function Assistant() {
 
         {/* Thread */}
         <section className="flex min-h-0 min-w-0 flex-col" aria-label="Conversation with Medo">
-          <header className="flex items-center gap-3 border-b border-line/70 px-3 py-3 sm:px-5">
-            <button onClick={() => setRailOpen(true)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-2 hover:bg-ink/5 lg:hidden" aria-label="Show conversations">
-              <PanelLeft className="h-5 w-5" />
+          <header className="flex items-center gap-3 border-b border-line px-3 py-2.5 sm:px-5">
+            <button onClick={() => setRailOpen(true)} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-ink-2 hover:bg-ink/5 lg:hidden" aria-label="Show conversations">
+              <PanelLeft className="h-5 w-5" strokeWidth={1.8} />
             </button>
-            <MedoAvatar size={30} />
+            <MedoAvatar size={28} />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-display font-semibold leading-tight">{activeTitle || 'Medo'}</p>
-              <p className="flex items-center gap-1.5 text-xs text-ink-3">
-                <span className="relative flex h-2 w-2"><span className="absolute inset-0 animate-pulse2 rounded-full bg-teal-400" /><span className="relative h-2 w-2 rounded-full bg-teal-500" /></span>
+              <p className="truncate font-medium leading-tight text-ink">{activeTitle || 'New conversation'}</p>
+              <p className="flex items-center gap-1.5 font-mono text-[0.8125rem] text-ink-3">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-600" aria-hidden />
                 Guarded health companion
               </p>
             </div>
-            <button onClick={startNew} className="btn btn-sm btn-ghost shrink-0" aria-label="Start a new conversation">
-              <SquarePen className="h-4 w-4" /> <span className="hidden sm:inline">New</span>
+            <button onClick={startNew} className="btn btn-md btn-ghost shrink-0 px-3" aria-label="Start a new conversation">
+              <SquarePen className="h-4 w-4" strokeWidth={1.8} /> <span className="hidden sm:inline">New</span>
             </button>
           </header>
 
-          <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(ellipse_at_top_left,rgba(231,251,246,.9),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(243,240,255,.9),transparent_55%)] px-3 py-5 sm:px-6" aria-live="polite">
+          <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-canvas/40 px-3 py-5 sm:px-6" aria-live="polite" aria-busy={send.isPending || loadingConvo}>
             {loadingConvo ? (
-              <Spinner label="Opening conversation…" className="h-full" />
+              <div className="mx-auto max-w-3xl space-y-4" aria-label="Opening conversation">
+                <div className="skeleton ml-auto h-12 w-2/3" />
+                <div className="skeleton h-24 w-5/6" />
+                <div className="skeleton ml-auto h-10 w-1/2" />
+              </div>
             ) : empty ? (
               <Welcome name={user?.first_name} onPick={sendText} disabled={send.isPending} />
             ) : (
@@ -213,7 +225,7 @@ export default function Assistant() {
             )}
           </div>
 
-          <div className="border-t border-line/60 bg-paper/90 px-3 pb-3 pt-3 sm:px-6">
+          <div className="border-t border-line bg-paper px-3 pb-3 pt-3 sm:px-6">
             <div className="mx-auto max-w-3xl">
               <Composer ref={composerRef} onSend={sendText} disabled={send.isPending || loadingConvo} reserveRight />
             </div>
@@ -221,11 +233,11 @@ export default function Assistant() {
         </section>
       </div>
 
-      <p className="mt-3 flex items-start justify-center gap-1.5 px-4 text-center text-xs text-ink-4">
-        <Info className="mt-px h-3.5 w-3.5 shrink-0" />
+      <p className="mt-3 flex items-start justify-center gap-1.5 px-4 text-center text-[0.8125rem] text-ink-3">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden />
         <span>
-          Medo offers general health information, not a diagnosis. In an emergency call <a href="tel:112" className="font-semibold text-rose-500 hover:underline">112</a>.
-          <span className="ml-1.5 inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Chats are private to you.</span>
+          Medo offers general health information, not a diagnosis. In an emergency call <a href="tel:112" className="font-medium text-rose-600 underline underline-offset-2">112</a>.
+          <span className="ml-1.5 inline-flex items-center gap-1"><Lock className="h-3 w-3" strokeWidth={1.8} aria-hidden /> Chats are private to you.</span>
         </span>
       </p>
 
@@ -234,7 +246,7 @@ export default function Assistant() {
         onOpenChange={(o) => !o && setToDelete(null)}
         title="Delete this conversation?"
         description={toDelete?.title ? `“${toDelete.title}” will be removed for good.` : undefined}
-        confirmLabel="Delete"
+        confirmLabel="Delete conversation"
         loading={remove.isPending}
         onConfirm={() => remove.mutate(toDelete.id)}
       />

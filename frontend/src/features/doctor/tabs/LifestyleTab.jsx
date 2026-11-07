@@ -4,54 +4,37 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Too
 import { BedDouble, Brain, Footprints, HeartPulse } from 'lucide-react'
 import { api } from '../../../lib/api'
 import { fmtDate, num } from '../../../lib/utils'
-import { Card, CardHeader } from '../../../components/ui/Card'
+import { Card } from '../../../components/ui/Card'
+import { CHART } from '../../../components/ui/Data'
 import { EmptyState, ErrorState, Skeleton } from '../../../components/ui/Feedback'
-import { TableScroll, Th } from '../shared'
+import { AXIS, DateTip, GRID, Head, TableScroll, Th } from '../shared'
 
-const AXIS = { tick: { fill: '#A39B8E', fontSize: 11 }, axisLine: false, tickLine: false }
-
-function Tip({ active, payload, unit, label: name }) {
-  if (!active || !payload?.length) return null
-  const p = payload[0]
-  return (
-    <div className="rounded-xl border border-line bg-paper/95 px-3 py-2 text-xs shadow-lift backdrop-blur">
-      <p className="font-medium text-ink">{fmtDate(p.payload.date, 'EEE d MMM')}</p>
-      <p className="mt-0.5 text-ink-3">{name}: <span className="num font-semibold text-ink">{num(p.value, 1)}{unit}</span></p>
-    </div>
-  )
-}
-
-function MiniChart({ data, dataKey, color, unit, label, kind = 'bar', domain }) {
+function MiniChart({ data, dataKey, color, unit, axisUnit, label, kind = 'bar', domain }) {
   const points = data.filter((d) => d[dataKey] != null)
-  if (points.length < 2) return <p className="grid h-40 place-items-center rounded-2xl bg-cream text-center text-sm text-ink-4">Not enough entries yet</p>
+  if (points.length < 2) return <p className="grid h-44 place-items-center rounded-xl bg-cream/70 text-center text-[0.9375rem] text-ink-3">Not enough entries yet</p>
+  const avg = points.reduce((s, d) => s + Number(d[dataKey]), 0) / points.length
   return (
-    <div className="h-40 -ml-3">
+    <figure className="-ml-2 h-44" aria-label={`${label} over the last ${points.length} logged days, average ${num(avg, 1)}${unit}`}>
       <ResponsiveContainer width="100%" height="100%">
         {kind === 'bar' ? (
-          <BarChart data={points} margin={{ top: 6, right: 4, left: 0, bottom: 0 }} barCategoryGap="22%">
-            <CartesianGrid stroke="#F0E9DD" strokeDasharray="3 6" vertical={false} />
-            <XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, 'd MMM')} minTickGap={22} {...AXIS} />
-            <YAxis width={30} domain={domain} {...AXIS} />
-            <Tooltip content={<Tip unit={unit} label={label} />} cursor={{ fill: 'rgba(47,93,80,.05)' }} />
-            <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} maxBarSize={18} animationDuration={900} />
+          <BarChart data={points} margin={{ top: 18, right: 4, left: 0, bottom: 0 }} barCategoryGap="24%">
+            <CartesianGrid {...GRID} />
+            <XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, 'd MMM')} minTickGap={28} {...AXIS} />
+            <YAxis width={40} domain={domain} {...AXIS} axisLine={false} label={{ value: axisUnit, position: 'top', offset: 8, dx: 8, fill: CHART.stone, fontSize: 13 }} />
+            <Tooltip content={<DateTip unit={unit} label={label} />} cursor={{ fill: 'rgba(23,22,20,.04)' }} />
+            <Bar dataKey={dataKey} fill={color} radius={[3, 3, 0, 0]} maxBarSize={16} animationDuration={800} />
           </BarChart>
         ) : (
-          <AreaChart data={points} margin={{ top: 6, right: 4, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id={`fill-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.25} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="#F0E9DD" strokeDasharray="3 6" vertical={false} />
-            <XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, 'd MMM')} minTickGap={22} {...AXIS} />
-            <YAxis width={30} domain={domain} {...AXIS} />
-            <Tooltip content={<Tip unit={unit} label={label} />} cursor={{ stroke: '#D9CFBF', strokeDasharray: '4 4' }} />
-            <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fill={`url(#fill-${dataKey})`} dot={{ r: 3, fill: '#fff', stroke: color, strokeWidth: 2 }} activeDot={{ r: 5 }} animationDuration={900} />
+          <AreaChart data={points} margin={{ top: 18, right: 4, left: 0, bottom: 0 }}>
+            <CartesianGrid {...GRID} />
+            <XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, 'd MMM')} minTickGap={28} {...AXIS} />
+            <YAxis width={40} domain={domain} {...AXIS} axisLine={false} label={{ value: axisUnit, position: 'top', offset: 8, dx: 8, fill: CHART.stone, fontSize: 13 }} />
+            <Tooltip content={<DateTip unit={unit} label={label} />} cursor={{ stroke: CHART.stone, strokeDasharray: '3 3' }} />
+            <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.75} fill={color} fillOpacity={0.08} dot={false} activeDot={{ r: 4, fill: color, stroke: '#FFFFFF', strokeWidth: 2 }} animationDuration={800} />
           </AreaChart>
         )}
       </ResponsiveContainer>
-    </div>
+    </figure>
   )
 }
 
@@ -65,47 +48,48 @@ export default function LifestyleTab({ patientId }) {
   const records = useMemo(() => q.data?.records ?? [], [q.data])
   const asc = useMemo(() => [...records].slice(0, 30).reverse(), [records])
 
-  if (q.isLoading) return <div className="grid gap-5 md:grid-cols-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-60 rounded-3xl" />)}</div>
+  if (q.isLoading) return <div className="grid gap-6 md:grid-cols-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-60 rounded-3xl" />)}</div>
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />
-  if (!records.length) return <Card><EmptyState icon={HeartPulse} tone="teal" title="No wellbeing logs yet" text="Sleep, stress, walking and heart-rate entries the patient logs will be charted here." /></Card>
+  if (!records.length) return <Card><EmptyState icon={HeartPulse} tone="teal" headingLevel={2} title="No wellbeing logs yet" text="Sleep, stress, walking and heart-rate entries the patient logs will be charted here." /></Card>
 
   const charts = [
-    { key: 'sleep_hours', label: 'Sleep', unit: ' h', color: '#8FB3A2', icon: BedDouble, tone: 'teal', kind: 'bar' },
-    { key: 'stress_level', label: 'Stress', unit: '/10', color: '#C8704E', icon: Brain, tone: 'apricot', kind: 'area', domain: [0, 10] },
-    { key: 'walking_distance', label: 'Walking', unit: ' km', color: '#2F5D50', icon: Footprints, tone: 'teal', kind: 'bar' },
+    { key: 'sleep_hours', label: 'Sleep', unit: ' h', axisUnit: 'hours', color: CHART.pine2, icon: BedDouble, kind: 'bar' },
+    { key: 'stress_level', label: 'Stress', unit: '/10', axisUnit: 'of 10', color: CHART.ember, icon: Brain, kind: 'area', domain: [0, 10] },
+    { key: 'walking_distance', label: 'Walking', unit: ' km', axisUnit: 'km', color: CHART.pine, icon: Footprints, kind: 'bar' },
   ]
 
   return (
-    <div className="space-y-5">
-      <div className="grid gap-5 md:grid-cols-3">
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-3">
         {charts.map((c) => {
           const a = avg(asc, c.key)
           return (
             <Card key={c.key}>
-              <CardHeader icon={c.icon} tone={c.tone} title={c.label} subtitle={a == null ? 'No entries' : `Avg ${num(a, 1)}${c.unit} · last ${asc.length} days`} />
-              <MiniChart data={asc} dataKey={c.key} color={c.color} unit={c.unit} label={c.label} kind={c.kind} domain={c.domain} />
+              <Head icon={c.icon} title={c.label} subtitle={a == null ? 'No entries' : `Avg ${num(a, 1)}${c.unit} · last ${asc.length} days`} className="mb-3" />
+              <MiniChart data={asc} dataKey={c.key} color={c.color} unit={c.unit} axisUnit={c.axisUnit} label={c.label} kind={c.kind} domain={c.domain} />
             </Card>
           )
         })}
       </div>
 
       <Card>
-        <CardHeader icon={HeartPulse} tone="teal" title="Daily log" subtitle={`${records.length} entries, newest first`} />
+        <Head title="Daily log" subtitle={`${records.length} entries, newest first`} />
         <TableScroll>
-          <table className="w-full min-w-[680px] text-sm">
-            <thead className="border-b border-line/70">
-              <tr><Th className="pl-0">Date</Th><Th>Sleep</Th><Th>Stress</Th><Th>Walking</Th><Th>Heart rate</Th><Th>Weight</Th><Th className="pr-0">Notes</Th></tr>
+          <table className="w-full min-w-[680px] text-[0.9375rem]">
+            <caption className="sr-only">Daily wellbeing log</caption>
+            <thead className="border-b border-line">
+              <tr><Th className="pl-0">Date</Th><Th>Sleep (h)</Th><Th>Stress (/10)</Th><Th>Walking (km)</Th><Th>Heart rate (bpm)</Th><Th>Weight (kg)</Th><Th className="pr-0">Notes</Th></tr>
             </thead>
-            <tbody className="divide-y divide-line/50">
+            <tbody className="divide-y divide-line">
               {records.map((r) => (
-                <tr key={r.id || r.date} className="transition-colors hover:bg-cream/70">
-                  <td className="whitespace-nowrap py-2.5 pl-0 pr-3 font-medium text-ink">{fmtDate(r.date, 'EEE, d MMM')}</td>
-                  <td className="num px-3 py-2.5 text-ink-2">{r.sleep_hours != null ? `${num(r.sleep_hours, 1)} h` : '—'}</td>
-                  <td className="num px-3 py-2.5 text-ink-2">{r.stress_level != null ? `${r.stress_level}/10` : '—'}</td>
-                  <td className="num px-3 py-2.5 text-ink-2">{r.walking_distance != null ? `${num(r.walking_distance, 1)} km` : '—'}</td>
-                  <td className="num px-3 py-2.5 text-ink-2">{r.heart_rate != null ? `${r.heart_rate} bpm` : '—'}</td>
-                  <td className="num px-3 py-2.5 text-ink-2">{r.weight_kg != null ? `${num(r.weight_kg, 1)} kg` : '—'}</td>
-                  <td className="max-w-[16rem] truncate py-2.5 pl-3 pr-0 text-xs text-ink-3" title={r.notes || ''}>{r.notes || ''}</td>
+                <tr key={r.id || r.date} className="transition-colors duration-150 hover:bg-cream/50">
+                  <th scope="row" className="whitespace-nowrap py-2.5 pl-0 pr-3 text-left font-medium text-ink">{fmtDate(r.date, 'EEE, d MMM')}</th>
+                  <td className="num px-3 py-2.5 text-ink-2">{r.sleep_hours != null ? num(r.sleep_hours, 1) : '—'}</td>
+                  <td className="num px-3 py-2.5 text-ink-2">{r.stress_level != null ? r.stress_level : '—'}</td>
+                  <td className="num px-3 py-2.5 text-ink-2">{r.walking_distance != null ? num(r.walking_distance, 1) : '—'}</td>
+                  <td className="num px-3 py-2.5 text-ink-2">{r.heart_rate != null ? r.heart_rate : '—'}</td>
+                  <td className="num px-3 py-2.5 text-ink-2">{r.weight_kg != null ? num(r.weight_kg, 1) : '—'}</td>
+                  <td className="max-w-[16rem] truncate py-2.5 pl-3 pr-0 text-[0.875rem] text-ink-3" title={r.notes || ''}>{r.notes || ''}</td>
                 </tr>
               ))}
             </tbody>
