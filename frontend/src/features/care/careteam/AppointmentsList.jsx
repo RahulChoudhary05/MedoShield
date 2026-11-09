@@ -64,7 +64,7 @@ export default function AppointmentsList({ items }) {
                       </div>
                       {a.message && <p className="mt-2.5 line-clamp-2 text-[0.9375rem] text-ink-3">“{a.message}”</p>}
                       {a.doctor_note && (
-                        <div className="mt-3 flex gap-2 border-l-2 border-teal-700 pl-3 text-[0.9375rem] text-ink-2">
+                        <div className="mt-3 flex gap-2 rounded-lg bg-cream/60 px-3 py-2 text-[0.9375rem] text-ink-2">
                           <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-700" strokeWidth={1.8} aria-hidden />
                           <span><span className="font-medium text-ink">Note from your doctor: </span>{a.doctor_note}</span>
                         </div>

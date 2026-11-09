@@ -16,6 +16,7 @@ const NotFound = lazy(() => import('./pages/public/NotFound'))
 const About = lazy(() => import('./pages/public/About'))
 const Privacy = lazy(() => import('./pages/public/Privacy'))
 const Terms = lazy(() => import('./pages/public/Terms'))
+const ContentPage = lazy(() => import('./pages/public/ContentPage'))
 
 const Dashboard = lazy(() => import('./pages/patient/Dashboard'))
 const MovementCheck = lazy(() => import('./pages/patient/MovementCheck'))
@@ -79,6 +80,9 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        {['/features', '/features/:slug', '/use-cases', '/use-cases/:slug', '/compare', '/compare/:slug', '/refer', '/partners'].map((p) => (
+          <Route key={p} path={p} element={<ContentPage />} />
+        ))}
         <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
         <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
         <Route path="/join/doctor" element={<GuestOnly><DoctorJoin /></GuestOnly>} />

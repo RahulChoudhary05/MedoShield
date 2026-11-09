@@ -16,13 +16,13 @@ export function Section({ id, kicker, title, description, action, icon: Icon, cl
         <header className="mb-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
           <div className="flex min-w-0 items-start gap-3">
             {Icon && (
-              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-cream text-teal-700 ring-1 ring-inset ring-line">
+              <span className="icon-teal mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl">
                 <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden />
               </span>
             )}
             <div className="min-w-0">
-              {kicker && <p className="kicker">{kicker}</p>}
               {title && <h2 id={headingId} className="text-[1.125rem] font-semibold leading-snug">{title}</h2>}
+              {kicker && <p className="mt-0.5 text-[0.875rem] text-ink-3">{kicker}</p>}
               {description && <p className="mt-1 max-w-prose text-[0.9375rem] text-ink-3">{description}</p>}
             </div>
           </div>
@@ -93,7 +93,7 @@ export function SubLabel({ children, className, as: As = 'p' }) {
 }
 
 /** Thin horizontal meter 0–100. */
-export function Meter({ value, color = '#234A38', className, label }) {
+export function Meter({ value, color = '#1D3AA6', className, label }) {
   const v = Math.max(0, Math.min(100, Number(value) || 0))
   return (
     <div className={cn('h-1.5 overflow-hidden rounded-full bg-cream', className)} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>

@@ -22,10 +22,10 @@ export function Badge({ tone = 'ink', dot = false, className, children }) {
 }
 
 /** Canonical risk colours (DESIGN.md hex) — for SVG/chart strokes and dots. */
-export const RISK_HEX = { LOW: '#3F6D56', MEDIUM: '#B8963A', HIGH: '#AF4A39', CALIBRATING: '#8F887D', UNKNOWN: '#B5AC9F' }
+export const RISK_HEX = { LOW: '#1E8A52', MEDIUM: '#C98A12', HIGH: '#C93A33', CALIBRATING: '#6B778B', UNKNOWN: '#A9B2C1' }
 
 const RISK_CLS = {
-  LOW: 'bg-teal-50 text-teal-800 ring-teal-100',
+  LOW: 'bg-mint-50 text-mint-600 ring-mint-100',
   MEDIUM: 'bg-butter-50 text-ink-2 ring-butter-200',
   HIGH: 'bg-rose-50 text-rose-600 ring-rose-100',
   CALIBRATING: 'bg-cream text-ink-2 ring-line',

@@ -1,64 +1,63 @@
-# MedoShield "Field Notes" design system
+# MedoShield "Clinical Swiss" design system
 
-Light theme only. Editorial-clinical: it should read like a well-made medical journal crossed with a precise
-instrument — calm, trustworthy, specific. Never like a generic AI/SaaS template.
+Light product UI framed by dark aurora bands. Swiss/editorial structure (grid, big grotesk type, hairlines),
+a futuristic aurora + glass moment on the marketing surfaces, clay-style icon tiles, and calm minimalism
+inside the app where people get work done. Tokens: `tailwind.config.js`. Components: `src/styles/index.css`.
 
-Built by Rahul Choudhary. Tokens live in `tailwind.config.js`, component classes in `src/styles/index.css`.
-
-## Colour (90–95 % neutral)
-| Token | Use |
+## Style keywords — what we use, and where
+| Keyword | Where it lives |
 |---|---|
-| `bg-canvas` #F6F2EA | page background (bone) |
-| `bg-paper` #FFFFFF | cards, inputs, popovers |
-| `bg-cream` #EFE9DE | sunken areas, hover fills |
-| `border-line` #E3DCCF | every hairline |
-| `text-ink` / `ink-2` / `ink-3` / `ink-4` | headings / body / secondary / meta (ink-4 only ≥ 14px, never body copy) |
-| `teal-*` (pine) | the ONE accent: primary actions, links, focus, active nav, "good/low risk" |
-| `apricot-*` (ember) | data highlights only (the tremor peak, a live dot, a badge). < 3 % of any screen |
-| `rose-*` | errors / high risk / SOS only |
-| `butter-*` | medium risk / warnings only |
-| `lilac-*` | warm stone neutral (NOT violet) — chart secondary series, "calibrating" |
+| Swiss design / editorial | Grid layouts, Schibsted Grotesk display type at tight tracking, hairline rules, tables |
+| Minimalism | Every signed-in screen: white cards, one cobalt action per area, no decoration |
+| Futuristic + Aurora | `.aurora` bands — hero, facts, final CTA, auth side panel, 404. Navy + cobalt/coral/green light + faint measurement grid |
+| Glassmorphism | `.glass` — only on aurora bands (needs something behind it): fact tiles, captions |
+| Clay style | `.icon-*` tiles and empty-state icons: soft top light, tinted shadow below |
+| Not used | Victorian, graffiti, pixel art, Y2K, pop art, collage, bohemian, handwritten, cyberpunk — they fight a calm clinical brand |
 
-Never: gradients on buttons/text, glows, coloured blobs, purple/violet, neon, raw hex inside components
-(exception: SVG/canvas/three.js strokes may use the hex values from the table).
+## Colour
+| Token | Hex | Use |
+|---|---|---|
+| `canvas` | #F4F6F9 | page |
+| `paper` | #FFFFFF | cards, inputs, nav |
+| `cream` | #EBEFF5 | sunken / hover |
+| `line` | #DFE4EC | hairlines |
+| `ink` / 2 / 3 / 4 | #0B1526 / #283347 / #536075 / #6B778B | text (ink-4 ≥ 4.5:1 on white) |
+| `navy-900` | #0B1526 | sidebar, mobile tab bar, aurora bands |
+| `teal-*` (= cobalt) | 600 #2549CC | primary actions, links, focus, active nav |
+| `apricot-*` (= coral) | 500 #D9522A | live data highlights only |
+| `mint-*` | 500 #1E8A52 | good / low risk |
+| `butter-*`, `rose-*` | | warning, error / high risk / SOS |
+Token names are historical (teal = cobalt, apricot = coral, lilac = slate) so every page re-skins from one file.
 
 ## Type
-- Display / page titles: **Instrument Serif** (`font-serif`, `.page-title`, `.h-display`), weight 400, tight leading.
-  Italic serif (`.serif-accent`) for at most one phrase per heading.
-- UI + body: **Geist** (`font-sans`, default). Body 16px (`text-base`), line-height ~1.6, max ~65ch.
-- Data / labels: **Geist Mono** (`font-mono`, `.kicker`, `.eyebrow`) in **sentence case** — no tracked ALL CAPS.
-- Nothing smaller than 13px (`text-[0.8125rem]`). Numbers: `.num` (tabular).
-- One H1 per page. Don't skip heading levels.
+- Display: **Schibsted Grotesk** semibold, tracking −0.03 to −0.04em (`font-display`; `font-serif` is an alias).
+- Body/UI: **Geist** 16px, line-height ~1.6, measure ≤ 70ch. Data: **Geist Mono** for measured values only.
+- One H1 per page. No label/eyebrow above a heading — context lines go *under* the title.
 
-## Shape & space
-- Radius: buttons/inputs `rounded-lg` (8px), tiles `rounded-xl` (12px), cards `rounded-3xl` (20px via `.card`).
-- Spacing on the 4/8 scale: 8, 12, 16, 24, 32, 48, 64, 96. Section padding `py-20 sm:py-28`. 48px heading→content.
-- Hairlines (`border-line`) and whitespace separate things — not shadows. `shadow-lift` only on hover/overlays, `shadow-float` for popovers/dialogs.
-- Max two levels of nesting (no box in a box in a box).
+## Shape, depth, motion
+- Radius: buttons/inputs 8px, tiles 10px, cards 14px (`.card` + `shadow-card`), aurora panels 16px.
+- Motion: ease `[0.2,0.8,0.2,1]`; hover 150ms, panels 200–240ms, entrances ≤ 600ms. Hero text is visible from frame one
+  (it only settles 8px), so it is the LCP immediately. No blur filters, tilt, cursor glow or infinite loops.
+- `MotionConfig reducedMotion="user"` globally.
 
-## Components (use these, don't re-invent)
-- `Button` (`components/ui/Button.jsx`): variants `primary` (ink), `brand` (pine), `outline`, `ghost`, `soft`, `danger`. At most two buttons per row; label = verb + object ("Start a free check", not "Learn more").
-- `Card`, `CardHeader` (`components/ui/Card.jsx`) — CardHeader icons are tonal squares.
-- `PageHeader` (`components/ui/motion.jsx`): mono kicker + serif title + lede + actions. Every signed-in page starts with it.
-- Motion helpers in `components/ui/motion.jsx`: `Reveal`, `Stagger`/`StaggerItem`, `CountUp`, `WordsReveal`.
-- Icons: `lucide-react` only, `strokeWidth={1.8}`, outline style only, never emoji as icons. Icon-only buttons need `aria-label`.
-- Marketing pages: wrap in `components/layout/MarketingLayout.jsx` (nav + footer with the creator credit).
-
-## Motion (calm, purposeful)
-- Easing `[0.2, 0.8, 0.2, 1]` for UI, `[0.65, 0, 0.35, 1]` for things moving across the screen. No bounce/overshoot springs.
-- Durations: hover 150ms, press 90ms, panels 200–240ms, entrances 400–800ms. Stagger 40–60ms.
-- Animate only `transform` and `opacity`. Hover: cards lift 2px, arrows nudge 3px, photos scale 1.02.
-- Welcome: hero word-reveal, charts/lines that draw in, counters, the 3D human, live "measurement" visuals,
-  gentle `Reveal` on section entry, page transitions. Banned: tilt, magnetic, cursor glow, parallax hijacking,
-  smooth-scroll libraries, carousels/auto-advancing sliders, logo/marquee ribbons, infinite decorative loops.
-- `MotionConfig reducedMotion="user"` is set globally; content must be readable without animation.
-
-## Accessibility
-- Contrast ≥ 4.5:1 for text. Focus ring is global (`:focus-visible`). Touch targets ≥ 44px.
-- Every image has meaningful `alt` (or `alt=""` if decorative) and width/height or aspect ratio.
-- Forms: visible `<label>`, inline errors, `aria-invalid`, `aria-describedby`.
+## UX patterns (where they are)
+| Pattern | Implementation |
+|---|---|
+| Command palette + shortcuts | `AppShell.jsx` — Ctrl/⌘K, `?` list, `G` then letter to jump, `C` start check |
+| Persistent sidebar / mobile tab bar | `AppShell.jsx`, `nav.js` |
+| Skeletons, empty, error states | `components/ui/Feedback.jsx`, `features/care/kit.jsx` |
+| Optimistic updates | dose logging (`TodaySchedule.jsx`), chat send, assistant |
+| Undo instead of modal | wellbeing log delete (`History.jsx`, 5-second undo) |
+| Destructive confirmation | `ConfirmDialog` in `features/care/shared.jsx` / `features/doctor/shared.jsx` |
+| Autosave | `useAutosave` (`lib/hooks.js`) — chat drafts per thread |
+| Debounce / throttle | `useDebouncedValue`, `useDebouncedCallback`, `useThrottledCallback` |
+| Table + bulk actions + filters | `components/ui/DataTable.jsx`; doctor patients (sort, URL-synced filters, CSV export, copy emails) |
+| Real-time status | `StatusIndicator.jsx` — Saving / Syncing / Up to date / Offline + offline banner |
+| Onboarding | 3-step register + dashboard `Activation.jsx` checklist |
+| Error recovery | `ErrorBoundary.jsx` — try again in place, auto-reload once on stale deploy chunks |
+| 404 | `pages/public/NotFound.jsx` (real 404 status via `404.html`) |
+| Referral / partners | `/refer`, `/partners` (`src/seo/content.js`) |
 
 ## Copy
-- Specific and calm. Real facts from the product (33 landmarks, 4–12 Hz band, 5-session baseline, 10-second check).
-- No invented testimonials, user counts, ratings, or "trusted by" logos. No "Learn more / Discover / Click here".
-- Sentence case everywhere.
+Specific and calm, sentence case. Real product facts only (33 landmarks, 4–12 Hz, 5-check baseline, 10-second check).
+No invented testimonials, counts or ratings. Not a diagnostic device — say so near every claim.

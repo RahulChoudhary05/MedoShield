@@ -70,7 +70,7 @@ export default function CareTeam() {
   return (
     <div>
       <PageHeader
-        kicker="Care team"
+       
         title="Your care"
         accent="team"
         description="Find a specialist who fits, request a visit, and keep every appointment in one place."

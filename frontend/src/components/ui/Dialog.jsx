@@ -39,7 +39,7 @@ export default function Dialog({ open, onOpenChange, title, description, childre
               >
                 <div className="flex items-start justify-between gap-4 border-b border-line px-5 pb-4 pt-5 sm:px-6">
                   <div className="min-w-0">
-                    <RD.Title className="font-serif text-[1.75rem] font-normal leading-tight tracking-[-0.015em] text-ink">{title}</RD.Title>
+                    <RD.Title className="font-serif text-[1.75rem] font-semibold leading-tight tracking-[-0.03em] text-ink">{title}</RD.Title>
                     {description
                       ? <RD.Description className="mt-1.5 max-w-[60ch] text-[0.9375rem] leading-relaxed text-ink-3">{description}</RD.Description>
                       : <RD.Description className="sr-only">{title}</RD.Description>}

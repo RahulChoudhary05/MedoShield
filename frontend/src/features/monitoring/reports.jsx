@@ -117,11 +117,11 @@ export function ReportResult({ report, compact = false }) {
           <LevelPill level={a.overall_risk} label={`${a.overall_risk || 'Unrated'} risk`} />
           <span className="font-mono text-[0.8125rem] text-ink-3">{a.report_type || 'Medical report'}</span>
         </div>
-        <h3 className="mt-3 font-serif text-[1.75rem] font-normal leading-snug text-balance">{a.short_description || RISK_COPY[a.overall_risk] || 'Here’s what your report says.'}</h3>
+        <h3 className="mt-3 font-serif text-[1.75rem] font-semibold leading-snug text-balance">{a.short_description || RISK_COPY[a.overall_risk] || 'Here’s what your report says.'}</h3>
         {a.short_description && RISK_COPY[a.overall_risk] && <p className="mt-1.5 text-[0.9375rem] text-ink-3">{RISK_COPY[a.overall_risk]}</p>}
         <div className={cn('mt-5 grid gap-5 border-t border-line pt-5', !compact && 'md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:gap-8')}>
           {a.main_risk ? (
-            <div className="border-l-2 pl-4" style={{ borderColor: r.color }}>
+            <div className="rounded-lg bg-cream/50 px-4 py-3">
               <p className={cn('flex items-center gap-1.5 font-mono text-[0.8125rem]', r.text)}><TriangleAlert className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden /> Main thing to know</p>
               <p className="mt-1.5 text-base leading-relaxed text-ink-2">{a.main_risk}</p>
             </div>

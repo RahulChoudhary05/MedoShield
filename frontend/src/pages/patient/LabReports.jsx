@@ -89,7 +89,7 @@ export default function LabReports() {
   return (
     <div>
       <PageHeader
-        kicker="Lab reports"
+       
         title="Understand your"
         accent="lab results"
         description="Upload a PDF and we’ll explain each result in plain language — what it means, what can help, and what to ask your doctor."
@@ -99,7 +99,7 @@ export default function LabReports() {
       <AnimatePresence mode="wait">
         {result ? (
           <motion.section key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4" aria-labelledby="report-title" aria-live="polite">
-            <h2 id="report-title" className="font-serif text-[2rem] leading-tight">Your report, <span className="italic text-teal-700">explained</span></h2>
+            <h2 id="report-title" className="font-serif text-[2rem] leading-tight">Your report, <span className="text-teal-600">explained</span></h2>
             <ReportResult report={result} />
           </motion.section>
         ) : (

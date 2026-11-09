@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { MotionConfig } from 'framer-motion'
 import App from './App'
-import { installSpotlight } from './lib/spotlight'
 import './styles/index.css'
 
 const queryClient = new QueryClient({
@@ -17,8 +16,6 @@ const queryClient = new QueryClient({
     },
   },
 })
-
-installSpotlight()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -37,3 +34,6 @@ createRoot(document.getElementById('root')).render(
     </QueryClientProvider>
   </StrictMode>,
 )
+
+// The app loaded fine, so a later stale-chunk error in this tab may auto-reload once again.
+window.addEventListener('load', () => setTimeout(() => { try { sessionStorage.removeItem('medo:chunk-reload') } catch { /* ignore */ } }, 8000))

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useAutosave } from '../../../lib/hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { ArrowUp, Loader2, Mic, Paperclip, Square, Trash2 } from 'lucide-react'
@@ -10,8 +11,9 @@ const FILE_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp']
 const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
 /** Text box + voice note recorder + file attach. */
-export default function MessageComposer({ onSendText, onSendMedia, uploading, reserveRight }) {
-  const [text, setText] = useState('')
+export default function MessageComposer({ onSendText, onSendMedia, uploading, reserveRight, draftKey }) {
+  // Unsent text is autosaved per conversation in this browser, so switching threads or reloading never loses it.
+  const [text, setText, draft] = useAutosave(draftKey ? `chat:${draftKey}` : null, '')
   const ta = useRef(null)
   const fileRef = useRef(null)
   const recorder = useRecorder((file) => {
@@ -30,7 +32,7 @@ export default function MessageComposer({ onSendText, onSendMedia, uploading, re
     const t = text.trim()
     if (!t) return
     onSendText(t.slice(0, 2000))
-    setText('')
+    draft.clear()
     ta.current?.focus()
   }
 
@@ -128,6 +130,11 @@ export default function MessageComposer({ onSendText, onSendMedia, uploading, re
           )}
         </AnimatePresence>
       </div>
+      {draftKey && text.trim() && !recording && (
+        <p className="mt-1 px-1 text-[0.8125rem] text-ink-4" aria-live="polite">
+          {draft.status === 'saving' ? 'Saving draft…' : 'Draft saved on this device'}
+        </p>
+      )}
     </div>
   )
 }

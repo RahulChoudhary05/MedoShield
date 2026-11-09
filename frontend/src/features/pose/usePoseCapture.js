@@ -62,8 +62,8 @@ function drawSkeleton(ctx, lm, w, h) {
   for (let i = 11; i < lm.length; i++) {
     const p = lm[i]
     if ((p.visibility ?? 1) < 0.35) continue
-    ctx.fillStyle = i === 15 || i === 16 ? '#CF7146' : '#ffffff'
-    ctx.strokeStyle = '#2D5944'
+    ctx.fillStyle = i === 15 || i === 16 ? '#F06A3B' : '#ffffff'
+    ctx.strokeStyle = '#2549CC'
     ctx.lineWidth = 2
     ctx.beginPath()
     ctx.arc(p.x * w, p.y * h, Math.max(3.5, w / 170), 0, Math.PI * 2)

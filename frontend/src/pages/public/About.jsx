@@ -49,8 +49,7 @@ const FACTS = [
 function SectionHead({ kicker, id, children, lede }) {
   return (
     <Reveal className="max-w-2xl">
-      <p className="kicker">{kicker}</p>
-      <h2 id={id} className="mt-3 font-serif text-[2.25rem] font-normal leading-[1.05] tracking-[-0.02em] text-ink sm:text-display-sm">{children}</h2>
+      <h2 id={id} data-topic={kicker} className="font-serif text-[2.25rem] font-semibold leading-[1.05] tracking-[-0.03em] text-ink sm:text-display-sm">{children}</h2>
       {lede && <p className="mt-4 text-[1.0625rem] leading-relaxed text-ink-3">{lede}</p>}
     </Reveal>
   )
@@ -82,7 +81,7 @@ export default function About() {
       <section className="container pb-16 pt-28 sm:pb-24 sm:pt-40">
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE }} className="max-w-4xl">
           <p className="kicker">About MedoShield AI</p>
-          <h1 className="mt-4 font-serif text-[3rem] font-normal leading-[0.98] tracking-[-0.03em] text-ink sm:text-display-lg lg:text-display-xl">
+          <h1 className="mt-4 font-serif text-[3rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-display-lg lg:text-display-xl">
             Movement, measured <span className="serif-accent">quietly.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-[1.125rem] leading-relaxed text-ink-2">{ABOUT.intro}</p>
@@ -181,7 +180,7 @@ export default function About() {
         <div className="container py-20 sm:py-28">
           <Reveal>
             <p className="kicker">The creator</p>
-            <h2 id="creator-h" className="mt-4 font-serif text-[3.25rem] font-normal leading-[0.95] tracking-[-0.03em] text-ink sm:text-display-lg">
+            <h2 id="creator-h" className="mt-4 font-serif text-[3.25rem] font-semibold leading-[0.95] tracking-[-0.03em] text-ink sm:text-display-lg">
               {CREATOR.name}
             </h2>
             <p className="mt-3 font-mono text-[0.9375rem] text-ink-3">{CREATOR.role} · {CREATOR.location}</p>
@@ -190,7 +189,7 @@ export default function About() {
           <div className="mt-12 grid gap-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-20">
             <div className="min-w-0">
               <Reveal className="max-w-[62ch] space-y-5 text-base leading-[1.7] text-ink-2">
-                <p className="font-serif text-[1.5rem] leading-[1.35] tracking-[-0.01em] text-ink">
+                <p className="font-serif text-[1.5rem] leading-[1.35] tracking-[-0.03em] text-ink">
                   Rahul designed and built MedoShield AI end to end — the on-device movement analysis, the clinician
                   workspace, the guarded AI assistant and the deployment it runs on.
                 </p>
@@ -268,7 +267,7 @@ export default function About() {
       <section className="border-t border-line">
         <div className="container flex flex-col items-start gap-6 py-20 sm:flex-row sm:items-end sm:justify-between sm:py-24">
           <Reveal className="max-w-xl">
-            <h2 className="font-serif text-[2.25rem] font-normal leading-[1.05] tracking-[-0.02em] text-ink sm:text-display-sm">
+            <h2 className="font-serif text-[2.25rem] font-semibold leading-[1.05] tracking-[-0.03em] text-ink sm:text-display-sm">
               Ten seconds is enough <span className="serif-accent">to start.</span>
             </h2>
             <p className="mt-3 text-base text-ink-3">Free for patients. Your video never leaves your device for a movement check.</p>

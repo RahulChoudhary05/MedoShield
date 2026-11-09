@@ -102,7 +102,7 @@ function Analyser() {
     return (
       <div className="space-y-4" aria-live="polite">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="font-serif text-[2rem] leading-tight">Your <span className="italic text-teal-700">movement review</span></h2>
+          <h2 className="font-serif text-[2rem] leading-tight">Your <span className="text-teal-600">movement review</span></h2>
           <Button variant="outline" icon={RotateCcw} onClick={() => { setResult(null); clear() }}>Analyse another video</Button>
         </div>
         <VideoResult analysis={result} />

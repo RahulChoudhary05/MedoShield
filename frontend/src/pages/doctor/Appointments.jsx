@@ -38,7 +38,7 @@ export default function Appointments() {
   return (
     <div>
       <PageHeader
-        kicker="Schedule"
+       
         title="Appointment"
         accent="requests"
         description="Accepting a request creates a secure care link — the patient’s monitoring data becomes visible to you and you can message each other."

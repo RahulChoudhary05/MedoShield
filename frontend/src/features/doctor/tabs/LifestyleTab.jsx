@@ -21,7 +21,7 @@ function MiniChart({ data, dataKey, color, unit, axisUnit, label, kind = 'bar', 
             <CartesianGrid {...GRID} />
             <XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, 'd MMM')} minTickGap={28} {...AXIS} />
             <YAxis width={40} domain={domain} {...AXIS} axisLine={false} label={{ value: axisUnit, position: 'top', offset: 8, dx: 8, fill: CHART.stone, fontSize: 13 }} />
-            <Tooltip content={<DateTip unit={unit} label={label} />} cursor={{ fill: 'rgba(23,22,20,.04)' }} />
+            <Tooltip content={<DateTip unit={unit} label={label} />} cursor={{ fill: 'rgba(11,21,38,.04)' }} />
             <Bar dataKey={dataKey} fill={color} radius={[3, 3, 0, 0]} maxBarSize={16} animationDuration={800} />
           </BarChart>
         ) : (

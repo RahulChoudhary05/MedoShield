@@ -25,7 +25,7 @@ function OptionRow({ o, i }) {
       <div className="mt-2 flex items-center gap-3">
         <span className="kicker shrink-0">Suitability</span>
         <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-cream" aria-hidden>
-          <span className="block h-full rounded-full" style={{ width: `${v}%`, background: v >= 70 ? '#234A38' : v >= 45 ? '#B8963A' : '#AF4A39' }} />
+          <span className="block h-full rounded-full" style={{ width: `${v}%`, background: v >= 70 ? '#1D3AA6' : v >= 45 ? '#C98A12' : '#C93A33' }} />
         </span>
         <span className="num w-8 text-right text-ink">{o.suitability == null ? '—' : Math.round(v)}</span>
       </div>
@@ -95,7 +95,7 @@ export default function GuidancePanel() {
                   </div>
                 )}
                 {r.see_doctor && !r.red_flags?.length && (
-                  <div className="flex items-start gap-3 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[#6E5716]">
+                  <div className="flex items-start gap-3 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[#7A4F06]">
                     <Stethoscope className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
                     <p className="text-[0.9375rem]"><span className="font-medium">A doctor or pharmacist is your best next step.</span> We couldn’t find a safe over-the-counter match for what you described.</p>
                   </div>

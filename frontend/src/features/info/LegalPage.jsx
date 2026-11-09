@@ -66,8 +66,7 @@ export default function LegalPage({ kicker, title, lede, updated, summary, secti
           transition={{ duration: 0.6, ease: EASE }}
           className="max-w-3xl border-b border-line pb-10"
         >
-          <p className="kicker">{kicker}</p>
-          <h1 className="mt-3 font-serif text-[2.75rem] font-normal leading-[1] tracking-[-0.025em] text-ink sm:text-display-md lg:text-display-lg">{title}</h1>
+          <h1 data-topic={kicker} className="font-serif text-[2.75rem] font-semibold leading-[1] tracking-[-0.025em] text-ink sm:text-display-md lg:text-display-lg">{title}</h1>
           {lede && <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-ink-2">{lede}</p>}
           <p className="mt-6 font-mono text-[0.8125rem] text-ink-3">Last updated: <time dateTime={updated.iso}>{updated.label}</time></p>
         </motion.header>

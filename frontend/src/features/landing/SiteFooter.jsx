@@ -18,24 +18,26 @@ function LinkedInMark(props) {
   )
 }
 
+// Every public page is linked from here, so none is orphaned (crawlable internal links).
 const COLUMNS = [
-  ['Product', [['How it works', '/#how'], ['The science', '/#science'], ['Privacy by design', '/#privacy'], ['For clinicians', '/join/doctor']]],
-  ['Get started', [['Create a free account', '/register'], ['Sign in', '/login'], ['Join as a clinician', '/join/doctor']]],
-  ['Company', [['About & creator', '/about'], ['Privacy policy', '/privacy'], ['Terms of use', '/terms']]],
+  ['Features', [['All features', '/features'], ['Tremor test', '/features/tremor-test'], ['Gait analysis', '/features/gait-analysis'], ['Balance check', '/features/balance-assessment']]],
+  ['Use cases', [['Parkinson’s tracking', '/use-cases/parkinsons-monitoring'], ['Essential tremor', '/use-cases/essential-tremor'], ['Remote monitoring', '/use-cases/remote-patient-monitoring'], ['Join as a clinician', '/join/doctor']]],
+  ['Compare', [['Phone vs wearables', '/compare/phone-camera-vs-wearables'], ['Home vs clinic', '/compare/home-monitoring-vs-clinic-visits'], ['All comparisons', '/compare']]],
+  ['Company', [['About & creator', '/about'], ['Invite someone', '/refer'], ['Partners', '/partners'], ['Privacy policy', '/privacy'], ['Terms of use', '/terms']]],
 ]
 
 /** Site-wide footer with the creator credit (Rahul Choudhary). */
 export default function SiteFooter() {
   return (
     <footer className="border-t border-line bg-canvas">
-      <div className="container grid gap-12 py-16 md:grid-cols-[1.3fr_2fr]">
+      <div className="container grid gap-12 py-16 lg:grid-cols-[1fr_2.4fr]">
         <div className="max-w-sm">
           <Logo />
           <p className="mt-5 text-[0.9375rem] leading-relaxed text-ink-3">
             Privacy-first tremor, gait and balance monitoring. A monitoring and education tool — it supports, but never replaces, your clinician.
           </p>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {COLUMNS.map(([title, links]) => (
             <div key={title}>
               <p className="text-[0.8125rem] font-medium text-ink">{title}</p>

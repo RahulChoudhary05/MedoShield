@@ -19,7 +19,7 @@ export default function Welcome({ name, onPick, disabled }) {
         <LogoMark size={32} animated />
       </motion.span>
       <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.5, ease: EASE }} className="mt-5 font-serif text-[2rem] leading-tight text-ink sm:text-[2.25rem]">
-        {greeting()}{name ? `, ${name}` : ''}. <span className="italic text-teal-700">How are you feeling?</span>
+        {greeting()}{name ? `, ${name}` : ''}. <span className="text-teal-600">How are you feeling?</span>
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.16, duration: 0.5 }} className="mt-2 max-w-prose text-base text-ink-3">
         I’m Medo. I can explain your movement results, share everyday tips and help you decide when to see a doctor. I won’t diagnose — but I’ll point you to the right care.

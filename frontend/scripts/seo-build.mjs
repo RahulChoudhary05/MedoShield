@@ -11,6 +11,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CREATOR, FAQ, PUBLIC_ROUTES, SITE, absUrl, fullTitle, jsonLd } from '../src/seo/site.js'
+import { CONTENT_UPDATED } from '../src/seo/content.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = join(root, 'dist')
@@ -33,7 +34,8 @@ function head(route) {
     `<meta name="creator" content="${esc(CREATOR.name)}" />`,
     `<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />`,
     `<link rel="canonical" href="${url}" />`,
-    `<meta property="og:type" content="${route.path === '/about' ? 'profile' : 'website'}" />`,
+    `<meta property="og:type" content="${route.path === '/about' ? 'profile' : route.kind && route.kind !== 'hub' ? 'article' : 'website'}" />`,
+    ...(route.kind ? [`<meta property="article:modified_time" content="${route.updated || CONTENT_UPDATED}" />`] : []),
     `<meta property="og:site_name" content="${esc(SITE.name)}" />`,
     `<meta property="og:locale" content="${SITE.locale}" />`,
     `<meta property="og:title" content="${esc(title)}" />`,
@@ -56,9 +58,15 @@ function head(route) {
 
 function noscript(route) {
   const links = PUBLIC_ROUTES.map((r) => `<a href="${r.path}">${esc(r.heading)}</a>`).join(' · ')
-  const faq = route.path === '/' ? `<h2>Questions</h2>${FAQ.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('')}` : ''
+  const faqList = route.path === '/' ? FAQ : route.faq || []
+  const faq = faqList.length ? `<h2>Questions</h2>${faqList.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('')}` : ''
+  // Full page body for crawlers and no-JS readers: sections, comparison table, child pages.
+  const sections = (route.sections || []).map((sec) =>
+    `<h2>${esc(sec.h)}</h2>${(sec.p || []).map((t) => `<p>${esc(t)}</p>`).join('')}${sec.list ? `<ul>${sec.list.map((li) => `<li>${esc(li)}</li>`).join('')}</ul>` : ''}`).join('')
+  const table = route.table ? `<table><thead><tr>${route.table.columns.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${route.table.rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : ''
+  const kids = route.kind === 'hub' ? `<ul>${PUBLIC_ROUTES.filter((r) => r.parent === route.path).map((r) => `<li><a href="${r.path}">${esc(r.heading)}</a> — ${esc(r.description)}</li>`).join('')}</ul>` : ''
   return '<noscript><main style="font-family:system-ui,sans-serif;max-width:680px;margin:4rem auto;padding:0 1rem;color:#171614;line-height:1.6">' +
-    `<h1>${esc(route.heading)}</h1><p>${esc(route.intro)}</p>${faq}` +
+    `<h1>${esc(route.heading)}</h1><p>${esc(route.intro)}</p>${kids}${table}${sections}${faq}` +
     `<p>Designed and built by <a href="${CREATOR.linkedin}">${esc(CREATOR.name)}</a>.</p><nav>${links}</nav>` +
     '<p>Please enable JavaScript to use the app.</p></main></noscript>'
 }
@@ -84,7 +92,7 @@ writeFileSync(join(dist, '404.html'), template.replace(SEO_BLOCK,
 // 3. Sitemap
 writeFileSync(join(dist, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>${NL}<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${NL}` +
-  PUBLIC_ROUTES.map((r) => `  <url><loc>${absUrl(r.path)}</loc><lastmod>${today}</lastmod><changefreq>${r.changefreq}</changefreq><priority>${r.priority.toFixed(1)}</priority>` +
+  PUBLIC_ROUTES.map((r) => `  <url><loc>${absUrl(r.path)}</loc><lastmod>${r.updated || (r.kind ? CONTENT_UPDATED : today)}</lastmod><changefreq>${r.changefreq}</changefreq><priority>${r.priority.toFixed(1)}</priority>` +
     (r.path === '/' ? `<image:image><image:loc>${SITE.url}${SITE.ogImage}</image:loc></image:image>` : '') + '</url>').join(NL) +
   `${NL}</urlset>${NL}`)
 

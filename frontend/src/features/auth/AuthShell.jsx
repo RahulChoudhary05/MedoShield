@@ -13,7 +13,7 @@ const PANELS = {
     photo: 'https://images.unsplash.com/photo-1764072955216-547f731d176d?w=1200&q=78&auto=format&fit=crop',
     alt: 'An older man taking a calm morning walk by a lake',
     kicker: 'Field notes · patient',
-    title: <>Ten seconds, <span className="serif-plain">once a day.</span></>,
+    title: <>Ten seconds <span className="text-teal-300">once a day.</span></>,
     facts: [
       ['33', 'body landmarks tracked per frame, on your device'],
       ['4–12 Hz', 'tremor band measured at rest and with arms out'],
@@ -25,7 +25,7 @@ const PANELS = {
     photo: 'https://images.unsplash.com/photo-1758691462858-f1286e5daf40?w=1200&q=78&auto=format&fit=crop',
     alt: 'A doctor reviewing results with an older patient at a clinic desk',
     kicker: 'Field notes · clinician',
-    title: <>A trend line, <span className="serif-plain">not a snapshot.</span></>,
+    title: <>A trend line <span className="text-teal-300">not a snapshot.</span></>,
     facts: [
       ['Tremor', 'dominant frequency and amplitude, check by check'],
       ['Gait', 'cadence and left / right symmetry over time'],
@@ -38,14 +38,14 @@ const PANELS = {
 function SidePanel({ variant }) {
   const p = PANELS[variant] || PANELS.patient
   return (
-    <aside aria-label="About MedoShield" className="relative hidden border-l border-line bg-paper lg:flex lg:flex-col">
+    <aside aria-label="About MedoShield" className="aurora hidden lg:flex lg:flex-col">
       <div className="sticky top-0 flex h-dvh flex-col p-8 xl:p-12">
         <motion.figure
           key={variant}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="relative min-h-0 flex-1 overflow-hidden rounded-3xl border border-line bg-cream"
+          className="relative min-h-0 flex-1 overflow-hidden rounded-2xl ring-1 ring-white/10"
         >
           <img
             src={p.photo}
@@ -59,7 +59,8 @@ function SidePanel({ variant }) {
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <figcaption className="absolute bottom-4 left-4 rounded-md bg-paper/95 px-2.5 py-1 font-mono text-[0.8125rem] text-ink-2">
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-navy-900/80 via-navy-900/10 to-transparent" />
+          <figcaption className="glass absolute bottom-4 left-4 rounded-lg px-3 py-1.5 text-[0.8125rem] text-white/90">
             {variant === 'doctor' ? 'Between visits, the data keeps arriving.' : 'Check in the morning, before the day gets busy.'}
           </figcaption>
         </motion.figure>
@@ -71,17 +72,16 @@ function SidePanel({ variant }) {
           transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
           className="pt-8"
         >
-          <p className="kicker">{p.kicker}</p>
-          <p className="mt-2 font-serif text-[2.25rem] leading-[1.05] tracking-[-0.02em] text-ink">{p.title}</p>
-          <dl className="mt-6 grid grid-cols-2 border-t border-line">
-            {p.facts.map(([k, v], i) => (
-              <div key={k} className={`border-b border-line py-4 ${i % 2 === 0 ? 'pr-5' : 'border-l pl-5'}`}>
-                <dt className="font-mono text-[0.9375rem] font-medium text-ink">{k}</dt>
-                <dd className="mt-1 text-[0.875rem] leading-snug text-ink-3">{v}</dd>
+          <p className="font-display text-[2.25rem] font-semibold leading-[1.05] tracking-[-0.035em] text-white">{p.title}</p>
+          <dl className="mt-6 grid grid-cols-2 gap-3">
+            {p.facts.map(([k, v]) => (
+              <div key={k} className="glass rounded-xl p-4">
+                <dt className="font-mono text-[0.9375rem] font-medium text-teal-200">{k}</dt>
+                <dd className="mt-1 text-[0.875rem] leading-snug text-white/70">{v}</dd>
               </div>
             ))}
           </dl>
-          <p className="mt-4 text-[0.8125rem] text-ink-3">A monitoring and education tool — not a diagnostic device.</p>
+          <p className="mt-4 text-[0.8125rem] text-white/50">A monitoring and education tool — not a diagnostic device.</p>
         </motion.div>
       </div>
     </aside>
@@ -129,9 +129,8 @@ export default function AuthShell({ children, variant = 'patient' }) {
 export function AuthHeading({ kicker, children, lede }) {
   return (
     <div>
-      {kicker && <p className="kicker">{kicker}</p>}
-      <h1 className="mt-2 font-serif text-[2.5rem] font-normal leading-[1.02] tracking-[-0.02em] text-ink sm:text-[2.875rem]">{children}</h1>
-      {lede && <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-3">{lede}</p>}
+      <h1 className="font-serif text-[2.5rem] font-semibold leading-[1.02] tracking-[-0.03em] text-ink sm:text-[2.875rem]">{children}</h1>
+      {(lede || kicker) && <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-3">{lede || kicker}</p>}
     </div>
   )
 }

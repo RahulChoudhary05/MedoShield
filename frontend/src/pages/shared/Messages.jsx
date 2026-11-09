@@ -56,10 +56,10 @@ export default function Messages() {
           <span className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-100">
             <MessagesSquare aria-hidden className="h-5 w-5" strokeWidth={1.8} />
           </span>
-          <h2 id="messages-empty" className="mx-auto mt-5 max-w-xl font-serif text-[1.75rem] font-normal leading-tight">
+          <h2 id="messages-empty" className="mx-auto mt-5 max-w-xl font-serif text-[1.75rem] font-semibold leading-tight">
             {isPatient
-              ? <>Messaging opens once a doctor <span className="italic text-teal-700">accepts</span> your appointment</>
-              : <>No patient conversations <span className="italic text-teal-700">yet</span></>}
+              ? <>Messaging opens once a doctor <span className="text-teal-600">accepts</span> your appointment</>
+              : <>No patient conversations <span className="text-teal-600">yet</span></>}
           </h2>
           <p className="mx-auto mt-3 max-w-[46ch] text-[0.9375rem] leading-relaxed text-ink-3">
             {isPatient
@@ -103,7 +103,7 @@ export default function Messages() {
             <span className="grid h-11 w-11 place-items-center rounded-xl bg-cream text-ink-2 ring-1 ring-inset ring-line">
               <MessagesSquare aria-hidden className="h-5 w-5" strokeWidth={1.8} />
             </span>
-            <h2 className="mt-5 font-serif text-[1.75rem] font-normal leading-tight">Pick a <span className="italic text-teal-700">conversation</span></h2>
+            <h2 className="mt-5 font-serif text-[1.75rem] font-semibold leading-tight">Pick a <span className="text-teal-600">conversation</span></h2>
             <p className="mt-2 max-w-[42ch] text-[0.9375rem] leading-relaxed text-ink-3">
               {isPatient ? 'Message your doctor, send a quick voice note, or share a report.' : 'Choose a patient to reply, send instructions or share files.'}
             </p>

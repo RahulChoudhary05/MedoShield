@@ -173,6 +173,7 @@ export default function ThreadView({ otherId, thread, role, base }) {
           <div className="mx-auto max-w-3xl">
             <MessageComposer
               reserveRight={isPatient}
+              draftKey={otherId}
               uploading={sendMedia.isPending}
               onSendText={(content) => sendText.mutate({ content, tmp: `tmp-${Date.now()}` })}
               onSendMedia={(file, kind) => sendMedia.mutate({ file, kind })}

@@ -4,12 +4,13 @@
  * route-specific HTML <head> tags (no JavaScript needed for crawlers / link previews).
  * Plain ESM, no JSX: Node imports this file directly.
  */
+import { ALL_CONTENT, CONTENT_UPDATED, HUBS } from './content.js'
 export const SITE = {
   name: 'MedoShield AI',
   shortName: 'MedoShield',
   url: 'https://medoshield.pages.dev',
   locale: 'en_IN',
-  themeColor: '#F6F2EA',
+  themeColor: '#F4F6F9',
   ogImage: '/og/og-default.png',
   ogImageAlt: 'MedoShield AI — privacy-first tremor, gait and balance monitoring from a ten-second phone check',
   tagline: 'Privacy-first tremor, gait & balance monitoring',
@@ -43,7 +44,7 @@ export const CREATOR = {
 export const PUBLIC_ROUTES = [
   {
     path: '/',
-    title: 'MedoShield AI — Tremor, gait & balance monitoring',
+    title: 'MedoShield AI — Tremor, gait & balance monitoring app',
     description: SITE.description,
     heading: 'Your movement, quietly understood.',
     intro: 'A ten-second check with your phone camera measures tremor, gait and balance on your device. MedoShield tracks the change against your own baseline and shares the trend with your doctor.',
@@ -59,7 +60,7 @@ export const PUBLIC_ROUTES = [
   },
   {
     path: '/register',
-    title: 'Create your free account',
+    title: 'Create a free tremor & gait tracking account',
     description: 'Start privacy-first tremor, gait and balance monitoring in under a minute. Free for patients — your video never leaves your device.',
     heading: 'Start caring smarter',
     intro: 'Create a free patient account and take your first ten-second movement check.',
@@ -67,7 +68,7 @@ export const PUBLIC_ROUTES = [
   },
   {
     path: '/join/doctor',
-    title: 'Join as a clinician',
+    title: 'Clinician sign-up: remote movement data',
     description: 'Monitor patients between visits with objective tremor, gait and balance biomarkers, AI-assisted summaries and secure messaging.',
     heading: 'Join MedoShield as a clinician',
     intro: 'See each patient\'s movement trend between visits, review flagged checks and message securely.',
@@ -83,7 +84,7 @@ export const PUBLIC_ROUTES = [
   },
   {
     path: '/privacy',
-    title: 'Privacy policy',
+    title: 'Privacy policy: on-device pose tracking',
     description: 'How MedoShield AI handles your data: on-device pose tracking, no raw video storage, encrypted sessions and doctor access only with your consent.',
     heading: 'Privacy policy',
     intro: 'Your video never leaves your device. Here is exactly what we store, why, and how you control it.',
@@ -91,13 +92,17 @@ export const PUBLIC_ROUTES = [
   },
   {
     path: '/terms',
-    title: 'Terms of use',
+    title: 'Terms of use: monitoring, not diagnosis',
     description: 'The terms for using MedoShield AI, a monitoring and education tool that supports, but never replaces, a qualified clinician.',
     heading: 'Terms of use',
     intro: 'MedoShield AI is a monitoring and education tool, not a diagnostic device.',
     changefreq: 'yearly', priority: 0.3,
   },
 ]
+
+// Feature / use-case / comparison / hub / growth pages live in content.js and join the same pipeline.
+const PRIORITY = { hub: 0.8, feature: 0.8, 'use-case': 0.8, compare: 0.7, refer: 0.5, partners: 0.5 }
+PUBLIC_ROUTES.push(...ALL_CONTENT.map((c) => ({ ...c, changefreq: 'monthly', priority: PRIORITY[c.kind] ?? 0.6 })))
 
 /** Private areas: titled for the browser tab, never indexed. */
 export const PRIVATE_TITLES = [
@@ -134,19 +139,27 @@ export function jsonLd(route) {
     { '@type': 'WebSite', '@id': `${SITE.url}/#website`, url: `${SITE.url}/`, name: SITE.name, inLanguage: 'en-IN', publisher: { '@id': `${SITE.url}/#org` }, creator: { '@id': `${SITE.url}/#creator` } },
     person,
     {
-      '@type': route.path === '/about' ? 'AboutPage' : route.path === '/' ? 'MedicalWebPage' : 'WebPage',
+      '@type': route.path === '/about' ? 'AboutPage' : route.path === '/' || ['feature', 'use-case', 'compare'].includes(route.kind) ? 'MedicalWebPage' : route.kind === 'hub' ? 'CollectionPage' : 'WebPage',
       '@id': `${url}#webpage`, url, name: fullTitle(route), description: route.description, inLanguage: 'en-IN',
+      dateModified: route.updated || CONTENT_UPDATED, ...(route.kind ? { datePublished: CONTENT_UPDATED } : {}),
       isPartOf: { '@id': `${SITE.url}/#website` }, author: { '@id': `${SITE.url}/#creator` },
       primaryImageOfPage: { '@type': 'ImageObject', url: `${SITE.url}${SITE.ogImage}`, width: 1200, height: 630 },
       ...(route.path === '/about' ? { mainEntity: { '@id': `${SITE.url}/#creator` } } : {}),
     },
   ]
   if (route.path !== '/') {
+    const parent = route.parent && HUBS.find((h) => h.path === route.parent)
+    const trail = [['Home', '/'], ...(parent ? [[parent.navLabel, parent.path]] : []), [route.navLabel || route.heading, route.path]]
     graph.push({
-      '@type': 'BreadcrumbList', itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.url}/` },
-        { '@type': 'ListItem', position: 2, name: route.heading, item: url },
-      ],
+      '@type': 'BreadcrumbList', '@id': `${url}#breadcrumb`,
+      itemListElement: trail.map(([name, path], i) => ({ '@type': 'ListItem', position: i + 1, name, item: absUrl(path) })),
+    })
+    graph[3].breadcrumb = { '@id': `${url}#breadcrumb` }
+  }
+  if (route.path !== '/' && route.faq?.length) {
+    graph.push({
+      '@type': 'FAQPage', '@id': `${url}#faq`,
+      mainEntity: route.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
     })
   }
   if (route.path === '/') {

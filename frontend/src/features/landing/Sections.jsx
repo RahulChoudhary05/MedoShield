@@ -19,13 +19,11 @@ const VIEW = { once: true, margin: '-60px' }
 function SectionHead({ id, n, name, title, accent, lede, children }) {
   return (
     <div className="grid gap-6 border-t border-ink/80 pt-6 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
-      <p className="kicker flex gap-3 md:flex-col md:gap-1">
-        <span className="text-ink">§ {n}</span>
-        <span>{name}</span>
-      </p>
+      {/* Margin note beside the heading on wide screens only — never a label stacked above it. */}
+      <p className="hidden pt-3 text-[0.9375rem] text-ink-3 md:block" aria-hidden="true">{name}</p>
       <Reveal>
         <h2 id={id} className="h-display max-w-[20ch] text-[2.375rem] leading-[1.02] sm:text-display-md lg:text-[3.5rem]">
-          {title}{accent && <> <span className="italic text-teal-700">{accent}</span></>}
+          {title}{accent && <> <span className="text-teal-600">{accent}</span></>}
         </h2>
         {lede && <p className="mt-5 max-w-[60ch] text-base leading-relaxed text-ink-2 sm:text-[1.0625rem]">{lede}</p>}
         {children}
@@ -53,19 +51,19 @@ const FACTS = [
 
 export function Facts() {
   return (
-    <section aria-labelledby="facts-title" className="border-b border-line">
+    <section aria-labelledby="facts-title" className="aurora -mt-px pb-16 sm:pb-24">
       <h2 id="facts-title" className="sr-only">MedoShield in four numbers</h2>
       <div className="container">
-        <dl className="grid grid-cols-2 lg:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {FACTS.map((f, i) => (
             <Reveal key={f.label} delay={i * 0.05}
-              className={cn('flex flex-col py-8 pr-4 sm:py-10', i % 2 === 1 && 'border-l border-line pl-4 sm:pl-6', i >= 2 && 'border-t border-line lg:border-t-0', i === 2 && 'lg:border-l lg:pl-6')}>
-              <dt className="order-2 mt-3 max-w-[24ch] text-[0.9375rem] leading-snug text-ink-3">{f.label}</dt>
+              className="glass flex flex-col rounded-2xl p-5 sm:p-6">
+              <dt className="order-2 mt-3 max-w-[24ch] text-[0.9375rem] leading-snug text-white/65">{f.label}</dt>
               <dd className="order-1 flex items-baseline gap-1.5">
                 {f.text
-                  ? <span className="font-serif text-[2.75rem] leading-none tracking-[-0.02em] text-ink sm:text-[3.5rem]">{f.text}</span>
-                  : <CountUp value={f.value} className="font-serif text-[2.75rem] font-normal leading-none text-ink sm:text-[3.5rem]" />}
-                {f.unit && <span className="font-mono text-[0.875rem] text-ink-3">{f.unit}</span>}
+                  ? <span className="font-display text-[2.5rem] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[3.25rem]">{f.text}</span>
+                  : <CountUp value={f.value} className="font-display text-[2.5rem] font-semibold leading-none tracking-[-0.04em] text-white sm:text-[3.25rem]" />}
+                {f.unit && <span className="font-mono text-[0.875rem] text-teal-200">{f.unit}</span>}
               </dd>
             </Reveal>
           ))}
@@ -184,7 +182,7 @@ export function Science() {
       <div className="mt-12 divide-y divide-line border-y border-line md:mt-16">
         {MEASURES.map((m) => (
           <article key={m.key} aria-labelledby={`m-${m.key}`} className="grid gap-8 py-10 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,1fr)_minmax(0,0.9fr)]">
-            <h3 id={`m-${m.key}`} className="font-serif text-[1.75rem] font-normal leading-tight">{m.title}</h3>
+            <h3 id={`m-${m.key}`} className="font-serif text-[1.75rem] font-semibold leading-tight">{m.title}</h3>
             <Reveal>
               <p className="max-w-[56ch] text-base leading-relaxed text-ink-2">{m.text}</p>
               <dl className="mt-6 grid gap-x-6 gap-y-2 font-mono text-[0.8125rem] sm:grid-cols-[6rem_1fr]">
@@ -300,7 +298,7 @@ export function Privacy() {
 
       <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
         <div>
-          <h3 className="font-serif text-[1.75rem] font-normal leading-tight">What is stored, and what is not</h3>
+          <h3 className="font-serif text-[1.75rem] font-semibold leading-tight">What is stored, and what is not</h3>
           <div className="mt-8 grid gap-8">
             <Ledger title="Stays on your phone" items={STAYS} icon={Minus} tone="text-ink-4" />
             <Ledger title="Sent and stored, encrypted in transit" items={LEAVES} icon={Check} tone="text-teal-700" />
@@ -308,7 +306,7 @@ export function Privacy() {
           </div>
         </div>
         <div>
-          <h3 className="font-serif text-[1.75rem] font-normal leading-tight">The assistant is guarded too</h3>
+          <h3 className="font-serif text-[1.75rem] font-semibold leading-tight">The assistant is guarded too</h3>
           <p className="mt-3 max-w-[56ch] text-base leading-relaxed text-ink-2">
             Ask Medo answers health questions inside six server-side layers. Pick a message to see where it stops.
           </p>
@@ -332,7 +330,7 @@ export function Everyday() {
   return (
     <Section id="everyday" labelledBy="everyday-title" className="pt-0 sm:pt-0">
       <div className="grid gap-6 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
-        <p className="kicker">Around the check</p>
+        <p className="hidden pt-2 text-[0.9375rem] text-ink-3 md:block" aria-hidden="true">Around the check</p>
         <div>
           <h2 id="everyday-title" className="h-display text-[2rem] leading-tight sm:text-display-sm">The rest of the week, in the same app.</h2>
           <ul className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
@@ -355,7 +353,7 @@ export function Everyday() {
 
 const RISK = {
   low: ['Low', 'bg-teal-50 text-teal-800'],
-  medium: ['Medium', 'bg-butter-50 text-[#6E5716]'],
+  medium: ['Medium', 'bg-butter-50 text-[#7A4F06]'],
   high: ['High', 'bg-rose-50 text-rose-600'],
   calibrating: ['Calibrating', 'bg-lilac-50 text-lilac-600'],
 }
@@ -438,7 +436,7 @@ export function Clinicians() {
       <div className="mt-12 grid gap-10 md:mt-16 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-14">
         <Reveal><DoctorPreview /></Reveal>
         <Reveal delay={0.08} className="flex flex-col">
-          <h3 className="font-serif text-[1.75rem] font-normal leading-tight">Built for a ten-minute appointment</h3>
+          <h3 className="font-serif text-[1.75rem] font-semibold leading-tight">Built for a ten-minute appointment</h3>
           <ul className="mt-6 divide-y divide-line border-y border-line">
             {CLINICIAN_POINTS.map((t) => (
               <li key={t} className="flex gap-3 py-3.5 text-base text-ink-2">
@@ -484,9 +482,8 @@ export function BuiltBy() {
     <section aria-labelledby="builtby-title" className="border-y border-line bg-paper py-20 sm:py-24">
       <div className="container grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
         <Reveal>
-          <p className="kicker">The maker</p>
-          <h2 id="builtby-title" className="h-display mt-4 text-[2.375rem] leading-[1.02] sm:text-display-md">
-            Designed and built end to end by <span className="italic text-teal-700">{CREATOR.name}.</span>
+          <h2 id="builtby-title" className="h-display text-[2.375rem] leading-[1.02] sm:text-display-md">
+            Designed and built end to end by <span className="text-teal-600">{CREATOR.name}.</span>
           </h2>
           <p className="mt-5 max-w-[56ch] text-base leading-relaxed text-ink-2">
             {CREATOR.summary} MedoShield covers the whole stack: on-device pose estimation, signal processing, a guarded LLM assistant, a clinician dashboard and the deployment behind them.
@@ -519,25 +516,27 @@ export function BuiltBy() {
 
 export function FinalCTA() {
   return (
-    <section aria-labelledby="cta-title" className="py-24 sm:py-32">
+    <section aria-labelledby="cta-title" className="py-16 sm:py-24">
       <div className="container">
+        <div className="relative isolate overflow-hidden rounded-3xl bg-navy-900 px-6 py-14 text-white sm:px-12 sm:py-20">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 -z-10 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(closest-side,rgba(56,96,230,.5),transparent)]" />
         <Reveal className="grid gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end">
           <div>
-            <p className="kicker flex items-center gap-2"><Camera className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /> Ten seconds, phone camera</p>
-            <h2 id="cta-title" className="h-display mt-5 text-[2.75rem] leading-[0.98] sm:text-display-lg">
-              Take today’s check. <span className="italic text-teal-700">Bring a clearer trend</span> to your next appointment.
+            <h2 id="cta-title" className="h-display text-[2.5rem] leading-[1.02] text-white sm:text-display-md">
+              Take today’s check. <span className="text-teal-300">Bring a clearer trend</span> to your next appointment.
             </h2>
           </div>
           <div>
             <div className="flex flex-wrap gap-3">
               <Button to="/register" variant="primary" size="lg" iconRight={ArrowRight}>Start a free check</Button>
-              <Button to="/join/doctor" variant="outline" size="lg" icon={Stethoscope}>For clinicians</Button>
+              <Button to="/join/doctor" variant="ghost" size="lg" icon={Stethoscope} className="border border-white/20 bg-white/[.06] text-white hover:bg-white/[.12] hover:text-white">For clinicians</Button>
             </div>
-            <p className="mt-5 max-w-[44ch] text-[0.875rem] leading-relaxed text-ink-3">
+            <p className="mt-5 max-w-[44ch] text-[0.875rem] leading-relaxed text-white/60">
               Free for patients. A monitoring and education tool, not a diagnostic device. In an emergency call 112 / 108.
             </p>
           </div>
         </Reveal>
+        </div>
       </div>
     </section>
   )

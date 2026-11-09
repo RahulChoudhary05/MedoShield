@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpDown, ChevronRight, Lock, MessageSquare, Search, SearchX, Unlock, Users } from 'lucide-react'
+import { ArrowUpDown, ChevronRight, Copy, Download, Lock, MessageSquare, Search, SearchX, Unlock, Users } from 'lucide-react'
 import { api } from '../../lib/api'
 import { cn, fmtRelative } from '../../lib/utils'
 import Button from '../../components/ui/Button'
@@ -11,7 +10,10 @@ import { RiskBadge, RISK_HEX, riskKey } from '../../components/ui/Badge'
 import { Avatar, MicroBars, PageHeader } from '../../components/ui/Data'
 import { EmptyState, ErrorState, Skeleton } from '../../components/ui/Feedback'
 import Segmented from '../../components/ui/Segmented'
-import { MiniBar, Tag, Th, levelOf, motorOf, patientMeta, subscoresOf } from '../../features/doctor/shared'
+import DataTable, { BulkButton, downloadCsv } from '../../components/ui/DataTable'
+import { useDebouncedValue } from '../../lib/hooks'
+import { toast } from 'sonner'
+import { MiniBar, Tag, levelOf, motorOf, patientMeta, subscoresOf } from '../../features/doctor/shared'
 
 const FILTERS = [
   { value: 'ALL', label: 'All' },
@@ -24,6 +26,7 @@ const FILTERS = [
 const RANK = { HIGH: 0, MEDIUM: 1, CALIBRATING: 2, LOW: 3, UNKNOWN: 4 }
 const SORTS = {
   risk: { label: 'Risk', fn: (a, b) => RANK[levelOf(a.latest_risk)] - RANK[levelOf(b.latest_risk)] },
+  motor: { label: 'Motor index', fn: (a, b) => (motorOf(a.latest_risk) ?? -1) - (motorOf(b.latest_risk) ?? -1) },
   recent: { label: 'Last check', fn: (a, b) => new Date(b.latest_risk?.created_at || 0) - new Date(a.latest_risk?.created_at || 0) },
   name: { label: 'Name', fn: (a, b) => (a.full_name || '').localeCompare(b.full_name || '') },
 }
@@ -37,9 +40,17 @@ const SUMMARY = [
 export default function Patients() {
   const navigate = useNavigate()
   const { data, isLoading, isError, error, refetch } = useQuery({ queryKey: ['doctor', 'patients'], queryFn: api.doctors.patients })
-  const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState('ALL')
+  const [params, setParams] = useSearchParams()
+  const [query, setQuery] = useState(params.get('q') || '')
+  const debouncedQuery = useDebouncedValue(query, 200)
+  const filter = FILTERS.some((f) => f.value === params.get('risk')) ? params.get('risk') : 'ALL'
+  const setFilter = (v) => setParams((p) => { const n = new URLSearchParams(p); v === 'ALL' ? n.delete('risk') : n.set('risk', v); return n }, { replace: true })
   const [sort, setSort] = useState('risk')
+  const [sortDir, setSortDir] = useState('asc')
+  // Keep the search in the URL (shareable, survives reload) without a history entry per keystroke.
+  useEffect(() => {
+    setParams((p) => { const n = new URLSearchParams(p); debouncedQuery ? n.set('q', debouncedQuery) : n.delete('q'); return n }, { replace: true })
+  }, [debouncedQuery, setParams])
 
   const patients = useMemo(() => data?.patients ?? [], [data])
   const counts = useMemo(() => {
@@ -52,19 +63,43 @@ export default function Patients() {
   }, [patients])
 
   const rows = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    return patients
+    const needle = debouncedQuery.trim().toLowerCase()
+    const sorter = SORTS[sort] || SORTS.risk
+    const list = patients
       .filter((p) => filter === 'ALL' || levelOf(p.latest_risk) === filter)
       .filter((p) => !needle || `${p.full_name} ${p.email || ''} ${(p.conditions || []).join(' ')}`.toLowerCase().includes(needle))
-      .sort(SORTS[sort].fn)
-  }, [patients, filter, query, sort])
+      .sort(sorter.fn)
+    return sortDir === 'desc' ? list.reverse() : list
+  }, [patients, filter, debouncedQuery, sort, sortDir])
+
+  const columns = useMemo(() => [
+    {
+      id: 'name', header: 'Patient', sortValue: true,
+      cell: (p) => (
+        <div className="flex items-center gap-3">
+          <Avatar name={p.full_name} size={36} />
+          <div className="min-w-0">
+            <Link to={`/doctor/patients/${p.id}`} onClick={(e) => e.stopPropagation()} className="block truncate font-medium text-ink underline-offset-4 group-hover:underline">{p.full_name}</Link>
+            <p className="truncate text-[0.8125rem] text-ink-3">{patientMeta(p) || '—'}</p>
+          </div>
+        </div>
+      ),
+    },
+    { id: 'conditions', header: 'Conditions', cell: (p) => <Conditions list={p.conditions} /> },
+    { id: 'risk', header: 'Latest risk', sortValue: true, cell: (p) => <RiskBadge level={levelOf(p.latest_risk)} pulse short /> },
+    { id: 'motor', header: 'Motor index', sortValue: true, cell: (p) => <MiniBar value={motorOf(p.latest_risk)} level={levelOf(p.latest_risk)} /> },
+    { id: 'profile', header: 'Profile', cell: (p) => <Profile p={p} level={levelOf(p.latest_risk)} /> },
+    { id: 'recent', header: 'Last check', sortValue: true, className: 'whitespace-nowrap text-ink-2', cell: (p) => (p.latest_risk?.created_at ? fmtRelative(p.latest_risk.created_at) : <span className="text-ink-3">Never</span>) },
+    { id: 'video', header: 'Video review', cell: (p) => <VideoState unlocked={p.video_unlocked} /> },
+    { id: 'messages', header: 'Messages', align: 'right', cell: (p) => <Unread n={p.unread_messages} /> },
+  ], [])
 
   const open = (id) => navigate(`/doctor/patients/${id}`)
 
   return (
     <div>
       <PageHeader
-        kicker="Your panel"
+       
         title="My"
         accent="patients"
         description="Everyone under your care, triaged by their latest movement check. Select a patient to open their chart."
@@ -148,72 +183,29 @@ export default function Patients() {
             tone="ink"
             title="No matches"
             text="Nobody on your panel matches that search and filter."
-            action={<Button variant="outline" onClick={() => { setQuery(''); setFilter('ALL') }}>Clear filters</Button>}
+            action={<Button variant="outline" onClick={() => { setQuery(''); setParams({}, { replace: true }) }}>Clear filters</Button>}
           />
         </Card>
       ) : (
         <>
-          {/* Desktop table */}
+          {/* Desktop table: sortable columns, row selection and bulk actions */}
           <Card pad={false} className="hidden overflow-hidden md:block">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[960px] text-[0.9375rem]">
-                <caption className="sr-only">Patients on your panel, {rows.length} shown, sorted by {SORTS[sort].label.toLowerCase()}</caption>
-                <thead className="border-b border-line">
-                  <tr>
-                    <Th className="pl-6">Patient</Th>
-                    <Th>Conditions</Th>
-                    <Th>Latest risk</Th>
-                    <Th>Motor index</Th>
-                    <Th>Profile</Th>
-                    <Th>Last check</Th>
-                    <Th>Video review</Th>
-                    <Th className="pr-6 text-right">Messages</Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  <AnimatePresence initial={false}>
-                    {rows.map((p) => {
-                      const level = levelOf(p.latest_risk)
-                      return (
-                        <motion.tr
-                          key={p.id}
-                          layout
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          onClick={() => open(p.id)}
-                          className="group cursor-pointer transition-colors duration-150 hover:bg-cream/50"
-                        >
-                          <td className="py-3 pl-6 pr-3">
-                            <div className="flex items-center gap-3">
-                              <Avatar name={p.full_name} size={36} />
-                              <div className="min-w-0">
-                                <Link
-                                  to={`/doctor/patients/${p.id}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="block truncate font-medium text-ink underline-offset-4 group-hover:underline"
-                                >
-                                  {p.full_name}
-                                </Link>
-                                <p className="truncate text-[0.8125rem] text-ink-3">{patientMeta(p) || '—'}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-3 py-3"><Conditions list={p.conditions} /></td>
-                          <td className="px-3 py-3"><RiskBadge level={level} pulse short /></td>
-                          <td className="px-3 py-3"><MiniBar value={motorOf(p.latest_risk)} level={level} /></td>
-                          <td className="px-3 py-3"><Profile p={p} level={level} /></td>
-                          <td className="whitespace-nowrap px-3 py-3 text-ink-2">{p.latest_risk?.created_at ? fmtRelative(p.latest_risk.created_at) : <span className="text-ink-3">Never</span>}</td>
-                          <td className="px-3 py-3"><VideoState unlocked={p.video_unlocked} /></td>
-                          <td className="py-3 pl-3 pr-6 text-right"><Unread n={p.unread_messages} /></td>
-                        </motion.tr>
-                      )
-                    })}
-                  </AnimatePresence>
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={columns}
+              rows={rows}
+              caption={`Patients on your panel, ${rows.length} shown`}
+              onRowClick={(p) => open(p.id)}
+              sort={{ id: sort, dir: sortDir }}
+              onSortChange={(next) => { setSort(next?.id || 'risk'); setSortDir(next?.dir || 'asc') }}
+              selectable
+              minWidth={1000}
+              bulkActions={(selected, clear) => (
+                <>
+                  <BulkButton icon={Download} onClick={() => { exportPatients(selected); clear() }}>Export CSV</BulkButton>
+                  <BulkButton icon={Copy} onClick={() => copyEmails(selected)}>Copy emails</BulkButton>
+                </>
+              )}
+            />
           </Card>
 
           {/* Mobile cards */}
@@ -304,4 +296,24 @@ function Unread({ n }) {
       <MessageSquare aria-hidden className="h-3.5 w-3.5" strokeWidth={1.8} /> <span className="num">{n}</span>
     </span>
   )
+}
+
+function exportPatients(list) {
+  downloadCsv(
+    `medoshield-patients-${new Date().toISOString().slice(0, 10)}.csv`,
+    ['Name', 'Email', 'Conditions', 'Latest risk', 'Motor index', 'Last check', 'Unread messages'],
+    list.map((p) => [p.full_name, p.email, (p.conditions || []).join('; '), levelOf(p.latest_risk), motorOf(p.latest_risk) ?? '', p.latest_risk?.created_at || '', p.unread_messages || 0]),
+  )
+  toast.success(`Exported ${list.length} patient${list.length === 1 ? '' : 's'}`)
+}
+
+async function copyEmails(list) {
+  const emails = list.map((p) => p.email).filter(Boolean)
+  if (!emails.length) { toast.error('None of the selected patients has an email on file'); return }
+  try {
+    await navigator.clipboard.writeText(emails.join(', '))
+    toast.success(`Copied ${emails.length} email${emails.length === 1 ? '' : 's'}`)
+  } catch {
+    toast.error('Your browser blocked clipboard access')
+  }
 }

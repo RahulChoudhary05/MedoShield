@@ -33,7 +33,7 @@ export default function Settings() {
   return (
     <div>
       <PageHeader
-        kicker="Settings"
+       
         title="Settings and"
         accent="privacy"
         description="Keep your details current so your care team — and Medo — can look after you well."

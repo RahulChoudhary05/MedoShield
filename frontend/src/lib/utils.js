@@ -37,11 +37,11 @@ export function greeting() {
 }
 
 export const RISK = {
-  LOW: { label: 'Low risk', short: 'Low', tone: 'teal', color: '#3F6D56', bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-200' },
-  MEDIUM: { label: 'Watch closely', short: 'Medium', tone: 'butter', color: '#B8963A', bg: 'bg-butter-50', text: 'text-[#6E5716]', ring: 'ring-butter-200' },
-  HIGH: { label: 'Needs review', short: 'High', tone: 'rose', color: '#AF4A39', bg: 'bg-rose-50', text: 'text-rose-600', ring: 'ring-rose-200' },
-  CALIBRATING: { label: 'Calibrating', short: 'Learning', tone: 'lilac', color: '#7A7064', bg: 'bg-lilac-50', text: 'text-lilac-600', ring: 'ring-lilac-200' },
-  UNKNOWN: { label: 'No data yet', short: '—', tone: 'ink', color: '#8F887D', bg: 'bg-cream', text: 'text-ink-3', ring: 'ring-line' },
+  LOW: { label: 'Low risk', short: 'Low', tone: 'mint', color: '#1E8A52', bg: 'bg-mint-50', text: 'text-mint-600', ring: 'ring-mint-200' },
+  MEDIUM: { label: 'Watch closely', short: 'Medium', tone: 'butter', color: '#C98A12', bg: 'bg-butter-50', text: 'text-[#7A4F06]', ring: 'ring-butter-200' },
+  HIGH: { label: 'Needs review', short: 'High', tone: 'rose', color: '#C93A33', bg: 'bg-rose-50', text: 'text-rose-600', ring: 'ring-rose-200' },
+  CALIBRATING: { label: 'Calibrating', short: 'Learning', tone: 'lilac', color: '#677387', bg: 'bg-lilac-50', text: 'text-lilac-600', ring: 'ring-lilac-200' },
+  UNKNOWN: { label: 'No data yet', short: '—', tone: 'ink', color: '#6B778B', bg: 'bg-cream', text: 'text-ink-3', ring: 'ring-line' },
 }
 export const riskOf = (level) => RISK[level === 'BASELINE_LEARNING' ? 'CALIBRATING' : level] || RISK.UNKNOWN
 

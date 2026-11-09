@@ -132,7 +132,7 @@ export function AnalysingSequence({ frames, task }) {
         </div>
         <div>
           <p className="kicker">Extracting biomarkers</p>
-          <h2 className="mt-2 font-serif text-[2rem] leading-tight text-ink">Reading your <span className="italic text-teal-700">movement</span></h2>
+          <h2 className="mt-2 font-serif text-[2rem] leading-tight text-ink">Reading your <span className="text-teal-600">movement</span></h2>
           <p className="mt-1.5 text-[0.9375rem] text-ink-3">{frames ? <><span className="num">{frames}</span> pose frames</> : 'Pose frames'} from your device — no video was sent.</p>
           <div className="mt-5 h-1 overflow-hidden rounded-full bg-line" aria-hidden>
             <motion.div className="h-full rounded-full bg-teal-700" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: EASE }} />

@@ -135,7 +135,7 @@ export function EmergencyForm({ me }) {
   const missing = !base.emergency_contact_phone
   return (
     <Section id="emergency" icon={HeartHandshake} kicker="The person we alert when you use SOS" title="Emergency contact">
-      <p className={missing ? 'mb-4 flex items-start gap-2.5 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[0.9375rem] text-[#6E5716]' : 'mb-4 flex items-start gap-2.5 text-[0.9375rem] text-ink-3'}>
+      <p className={missing ? 'mb-4 flex items-start gap-2.5 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[0.9375rem] text-[#7A4F06]' : 'mb-4 flex items-start gap-2.5 text-[0.9375rem] text-ink-3'}>
         <Siren className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
         {missing
           ? 'No contact saved yet. When you hold the SOS button, we text this person your location and alert your care team.'

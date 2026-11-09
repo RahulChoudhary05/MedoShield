@@ -19,7 +19,7 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader kicker="Account" title="Profile and" accent="settings" description="Keep your practice details current and your account secure." />
+      <PageHeader title="Profile and" accent="settings" description="Keep your practice details current and your account secure." />
 
       <Stagger className="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
         <StaggerItem>
@@ -30,7 +30,7 @@ export default function Settings() {
               <div className="flex items-center gap-4">
                 <Avatar name={p.full_name || `${p.first_name || ''} ${p.last_name || ''}`} size={64} />
                 <div className="min-w-0">
-                  <h2 id="doctor-identity" className="truncate font-serif text-[1.75rem] font-normal leading-tight">{p.full_name || 'Doctor'}</h2>
+                  <h2 id="doctor-identity" className="truncate font-serif text-[1.75rem] font-semibold leading-tight">{p.full_name || 'Doctor'}</h2>
                   <p className="truncate text-[0.9375rem] text-ink-3">{p.specialty || 'Specialty not set'}</p>
                 </div>
               </div>

@@ -31,7 +31,7 @@ function useOnFirstInteraction() {
 function Silhouette() {
   return (
     <svg viewBox="0 0 200 420" className="h-[82%] w-auto" aria-hidden="true">
-      <g fill="#EFE9DE" stroke="#B5AC9F" strokeWidth="1.4">
+      <g fill="#EBEFF5" stroke="#A9B2C1" strokeWidth="1.4">
         <rect x="40" y="96" width="20" height="120" rx="10" transform="rotate(6 50 96)" />
         <rect x="140" y="96" width="20" height="120" rx="10" transform="rotate(-6 150 96)" />
         <rect x="70" y="240" width="27" height="160" rx="13" />
@@ -40,7 +40,7 @@ function Silhouette() {
         <rect x="90" y="64" width="20" height="22" rx="8" />
         <ellipse cx="100" cy="42" rx="22" ry="27" />
       </g>
-      <ellipse cx="100" cy="410" rx="46" ry="5" fill="#D4CDC3" opacity=".6" />
+      <ellipse cx="100" cy="410" rx="46" ry="5" fill="#D0D6E0" opacity=".6" />
     </svg>
   )
 }
@@ -82,7 +82,7 @@ export default function BodyStage() {
   const [markers, setMarkers] = useState(true)
 
   return (
-    <figure className="overflow-hidden rounded-3xl border border-line bg-paper">
+    <figure className="overflow-hidden rounded-2xl border border-white/10 bg-paper shadow-float">
       <div className="relative aspect-[4/5] w-full bg-[radial-gradient(60%_55%_at_50%_45%,#F3F6F9_0%,#FCFAF6_72%)] sm:aspect-[5/6]">
         {!ready && (
           <button type="button" onClick={load} className="absolute inset-0 grid place-items-center" aria-label="Load the interactive 3D human">

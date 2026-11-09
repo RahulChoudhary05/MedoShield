@@ -4,10 +4,10 @@ import { CountUp, PageHeader as FieldNotesHeader } from './motion'
 
 const EASE = [0.2, 0.8, 0.2, 1]
 /** DESIGN.md chart hex values (SVG strokes may use raw hex). */
-export const CHART = { ink: '#171614', pine: '#234A38', pine2: '#3F6D56', ember: '#B95A31', stone: '#8F887D', grid: '#E3DCCF', track: '#EFE9DE', butter: '#B8963A', rose: '#AF4A39' }
+export const CHART = { ink: '#0B1526', pine: '#1D3AA6', pine2: '#3860E6', good: '#1E8A52', ember: '#D9522A', stone: '#6B778B', grid: '#DFE4EC', track: '#EBEFF5', butter: '#C98A12', rose: '#C93A33' }
 
 /** Score colour scale shared by rings and bars. */
-export const scoreHex = (v) => (v == null ? CHART.stone : v >= 70 ? CHART.pine2 : v >= 45 ? CHART.butter : CHART.rose)
+export const scoreHex = (v) => (v == null ? CHART.stone : v >= 70 ? CHART.good : v >= 45 ? CHART.butter : CHART.rose)
 
 /** Circular score gauge (0-100). */
 export function ScoreRing({ value, size = 132, stroke = 11, color = CHART.pine2, track = CHART.track, label, sub, className }) {

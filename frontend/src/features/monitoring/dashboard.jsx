@@ -319,7 +319,7 @@ export function LifestyleCard({ records = [] }) {
                   {latest != null && <span className="font-mono text-[0.8125rem] text-ink-3">{m.unit}</span>}
                 </p>
                 {latest != null && <p className={cn('mt-1 text-[0.8125rem]', ok ? 'text-teal-700' : 'text-apricot-600')}>{ok ? 'In a healthy range' : 'Worth a look'}</p>}
-                <Sparkline values={vals} color="#234A38" width={140} height={28} className="mt-2 w-full max-w-full" />
+                <Sparkline values={vals} color="#1D3AA6" width={140} height={28} className="mt-2 w-full max-w-full" />
               </div>
             )
           })}

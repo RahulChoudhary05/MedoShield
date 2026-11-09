@@ -151,7 +151,7 @@ export default function MovementCheck() {
             <AnimatePresence>
               {guidance && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                  <div role="alert" className="flex items-start gap-3 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[#6E5716]">
+                  <div role="alert" className="flex items-start gap-3 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[#7A4F06]">
                     <Lightbulb className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.8} aria-hidden />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{guidance.title}</p>
@@ -270,7 +270,7 @@ export default function MovementCheck() {
             <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="kicker">{meta.label} · saved just now</p>
-                <h2 id="result-title" className="mt-1 font-serif text-[2rem] leading-tight text-ink">Here’s what we <span className="italic text-teal-700">measured</span></h2>
+                <h2 id="result-title" className="mt-1 font-serif text-[2rem] leading-tight text-ink">Here’s what we <span className="text-teal-600">measured</span></h2>
                 <Link to="/app" className="link mt-2 inline-flex min-h-[44px] items-center gap-1.5 text-[0.9375rem]"><LineChart className="h-4 w-4" strokeWidth={1.8} aria-hidden /> View your trend</Link>
               </div>
               <div className="flex flex-wrap gap-2">

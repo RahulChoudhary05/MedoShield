@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import * as Popover from '@radix-ui/react-popover'
 import * as DD from '@radix-ui/react-dropdown-menu'
 import { Command } from 'cmdk'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bell, CheckCheck, ChevronDown, LogOut, Search, Settings2, ShieldCheck } from 'lucide-react'
+import { Bell, CheckCheck, ChevronDown, Keyboard, LogOut, Search, Settings2, ShieldCheck, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import Logo from '../brand/Logo'
 import { Avatar } from '../ui/Data'
@@ -13,7 +13,10 @@ import { api } from '../../lib/api'
 import { useAuth } from '../../store/auth'
 import { cn, fmtRelative } from '../../lib/utils'
 import ErrorBoundary from './ErrorBoundary'
-import { DOCTOR_NAV, MOBILE_DOCTOR, MOBILE_PATIENT, PATIENT_NAV } from './nav'
+import { DOCTOR_ACTIONS, DOCTOR_NAV, MOBILE_DOCTOR, MOBILE_PATIENT, PATIENT_ACTIONS, PATIENT_NAV } from './nav'
+import { OfflineBanner, SyncIndicator } from './StatusIndicator'
+import Dialog from '../ui/Dialog'
+import { useHotkeys } from '../../lib/hooks'
 import SOSButton from '../../features/sos/SOSButton'
 import MedicationReminders from '../../features/medications/MedicationReminders'
 
@@ -24,7 +27,7 @@ function SideNav({ nav, onNavigate }) {
     <nav aria-label="App" className="flex flex-col gap-6">
       {nav.map((group) => (
         <div key={group.section}>
-          <p className="mb-1.5 px-3 font-mono text-[0.75rem] text-ink-4">{group.section}</p>
+          <p className="mb-1.5 px-3 text-[0.75rem] font-medium uppercase tracking-[0.08em] text-white/40">{group.section}</p>
           <ul className="space-y-0.5">
             {group.items.map((item) => (
               <li key={item.to}>
@@ -33,19 +36,19 @@ function SideNav({ nav, onNavigate }) {
                   end={item.end}
                   onClick={onNavigate}
                   className={({ isActive }) =>
-                    cn('group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[0.9375rem] transition-colors duration-150', isActive ? 'font-medium text-ink' : 'text-ink-3 hover:bg-ink/[.04] hover:text-ink')
+                    cn('group relative flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-[0.9375rem] transition-colors duration-150', isActive ? 'font-medium text-white' : 'text-white/65 hover:bg-white/[.06] hover:text-white')
                   }
                 >
                   {({ isActive }) => (
                     <>
                       {isActive && (
-                        <motion.span layoutId="nav-active" className="absolute inset-0 rounded-lg border border-line bg-paper" transition={{ duration: 0.24, ease: [0.65, 0, 0.35, 1] }}>
-                          <span className="absolute inset-y-2 left-0 w-[2px] rounded-full bg-teal-700" />
+                        <motion.span layoutId="nav-active" className="absolute inset-0 rounded-lg bg-white/[.09] ring-1 ring-inset ring-white/10" transition={{ duration: 0.24, ease: [0.65, 0, 0.35, 1] }}>
+                          <span className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-teal-400" />
                         </motion.span>
                       )}
-                      <item.icon className={cn('relative z-10 h-[18px] w-[18px] transition-colors', isActive ? 'text-teal-700' : 'text-ink-4 group-hover:text-ink-2')} strokeWidth={1.8} />
+                      <item.icon className={cn('relative z-10 h-[18px] w-[18px] transition-colors', isActive ? 'text-teal-300' : 'text-white/45 group-hover:text-white/80')} strokeWidth={1.8} />
                       <span className="relative z-10">{item.label}</span>
-                      {item.badge && <span className="relative z-10 ml-auto rounded-md border border-apricot-200 bg-apricot-50 px-1.5 font-mono text-[0.7rem] text-apricot-600">{item.badge}</span>}
+                      {item.badge && <span className="relative z-10 ml-auto rounded-md bg-apricot-400/90 px-1.5 text-[0.7rem] font-semibold text-white">{item.badge}</span>}
                     </>
                   )}
                 </NavLink>
@@ -101,19 +104,43 @@ function Notifications() {
   )
 }
 
-function CommandPalette({ open, setOpen, nav }) {
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+const MOD = isMac ? '⌘' : 'Ctrl'
+
+function Kbd({ children }) {
+  return <kbd className="inline-flex min-w-6 items-center justify-center rounded-md border border-line bg-paper px-1.5 font-mono text-[0.75rem] text-ink-3">{children}</kbd>
+}
+
+function ShortcutsDialog({ open, onOpenChange, nav, actions }) {
+  const goto = nav.flatMap((g) => g.items).filter((i) => i.hotkey)
+  const rows = [
+    ['Open the command palette', [MOD, 'K']],
+    ['Show this list', ['?']],
+    ...actions.filter((a) => a.hotkey).map((a) => [a.label, [a.hotkey.toUpperCase()]]),
+    ...goto.map((i) => [`Go to ${i.label.toLowerCase()}`, i.hotkey.toUpperCase().split(' ')]),
+  ]
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} title="Keyboard shortcuts" description="Press G, then a letter, to jump anywhere. Shortcuts pause while you type in a field." size="md">
+      <ul className="divide-y divide-line">
+        {rows.map(([label, keys]) => (
+          <li key={label} className="flex items-center justify-between gap-4 py-2.5 text-[0.9375rem]">
+            <span className="text-ink-2">{label}</span>
+            <span className="flex shrink-0 items-center gap-1">
+              {keys.map((k, i) => <Fragment key={i}>{i > 0 && <span className="text-[0.75rem] text-ink-4">then</span>}<Kbd>{k}</Kbd></Fragment>)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Dialog>
+  )
+}
+
+function CommandPalette({ open, setOpen, nav, actions, onShortcuts, onSignOut }) {
   const navigate = useNavigate()
   const items = useMemo(() => nav.flatMap((g) => g.items.map((i) => ({ ...i, group: g.section }))), [nav])
-  useEffect(() => {
-    const onKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        setOpen((o) => !o)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [setOpen])
+  const run = (fn) => { setOpen(false); fn() }
+  const itemCls = 'flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[0.9375rem] text-ink-2 data-[selected=true]:bg-cream data-[selected=true]:text-ink'
+  const groupCls = '[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-[0.8125rem] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ink-4'
   return (
     <AnimatePresence>
       {open && (
@@ -125,17 +152,34 @@ function CommandPalette({ open, setOpen, nav }) {
                 <Command.Input autoFocus placeholder="Jump to…" className="h-14 w-full bg-transparent text-base outline-none placeholder:text-ink-4" />
                 <kbd className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[0.7rem] text-ink-4">Esc</kbd>
               </div>
-              <Command.List className="max-h-80 overflow-y-auto p-2">
-                <Command.Empty className="px-4 py-8 text-center text-sm text-ink-3">No matches.</Command.Empty>
+              <Command.List className="max-h-[22rem] overflow-y-auto p-2">
+                <Command.Empty className="px-4 py-8 text-center text-sm text-ink-3">Nothing matches. Try a page name such as “medications”.</Command.Empty>
+                <Command.Group heading="Actions" className={groupCls}>
+                  {actions.map((a) => (
+                    <Command.Item key={a.id} value={`${a.label} action`} onSelect={() => run(() => navigate(a.to))} className={itemCls}>
+                      <Zap className="h-4 w-4" strokeWidth={1.8} aria-hidden /> {a.label}
+                      {a.hotkey && <span className="ml-auto"><Kbd>{a.hotkey.toUpperCase()}</Kbd></span>}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
                 {[...new Set(items.map((i) => i.group))].map((g) => (
-                  <Command.Group key={g} heading={g} className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.75rem] [&_[cmdk-group-heading]]:text-ink-4">
+                  <Command.Group key={g} heading={g} className={groupCls}>
                     {items.filter((i) => i.group === g).map((i) => (
-                      <Command.Item key={i.to} value={`${i.label} ${g}`} onSelect={() => { navigate(i.to); setOpen(false) }} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[0.9375rem] text-ink-2 data-[selected=true]:bg-cream data-[selected=true]:text-ink">
-                        <i.icon className="h-4 w-4" strokeWidth={1.8} /> {i.label}
+                      <Command.Item key={i.to} value={`${i.label} ${g}`} onSelect={() => run(() => navigate(i.to))} className={itemCls}>
+                        <i.icon className="h-4 w-4" strokeWidth={1.8} aria-hidden /> {i.label}
+                        {i.hotkey && <span className="ml-auto hidden gap-1 sm:flex">{i.hotkey.toUpperCase().split(' ').map((k) => <Kbd key={k}>{k}</Kbd>)}</span>}
                       </Command.Item>
                     ))}
                   </Command.Group>
                 ))}
+                <Command.Group heading="Help & account" className={groupCls}>
+                  <Command.Item value="keyboard shortcuts help" onSelect={() => run(onShortcuts)} className={itemCls}>
+                    <Keyboard className="h-4 w-4" strokeWidth={1.8} aria-hidden /> Keyboard shortcuts <span className="ml-auto"><Kbd>?</Kbd></span>
+                  </Command.Item>
+                  <Command.Item value="sign out log out" onSelect={() => run(onSignOut)} className={itemCls}>
+                    <LogOut className="h-4 w-4" strokeWidth={1.8} aria-hidden /> Sign out
+                  </Command.Item>
+                </Command.Group>
               </Command.List>
             </Command>
           </motion.div>
@@ -145,17 +189,22 @@ function CommandPalette({ open, setOpen, nav }) {
   )
 }
 
-function UserMenu({ user, role }) {
+function useSignOut() {
   const navigate = useNavigate()
   const clear = useAuth((s) => s.clear)
   const qc = useQueryClient()
-  async function logout() {
+  return async function logout() {
     try { await api.auth.logout() } catch { /* ignore */ }
     qc.clear()
     clear()
     toast.success('Signed out safely')
     navigate('/login', { replace: true })
   }
+}
+
+function UserMenu({ user, role }) {
+  const navigate = useNavigate()
+  const logout = useSignOut()
   const name = role === 'doctor' ? user?.full_name : user?.full_name || user?.first_name
   return (
     <DD.Root>
@@ -189,64 +238,84 @@ function UserMenu({ user, role }) {
 export default function AppShell() {
   const { user, role } = useAuth()
   const [cmd, setCmd] = useState(false)
+  const [keysOpen, setKeysOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const signOut = useSignOut()
   const nav = role === 'doctor' ? DOCTOR_NAV : PATIENT_NAV
+  const actions = role === 'doctor' ? DOCTOR_ACTIONS : PATIENT_ACTIONS
   const mobile = role === 'doctor' ? MOBILE_DOCTOR : MOBILE_PATIENT
   const home = role === 'doctor' ? '/doctor' : '/app'
   useEffect(() => {
-    window.scrollTo({ top: 0 })
-  }, [location.pathname])
+    if (!location.hash) { window.scrollTo({ top: 0 }); return undefined }
+    // Deep links such as /app/settings#emergency: wait for the lazy page to render, then scroll to it.
+    const t = setTimeout(() => document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'start' }), 350)
+    return () => clearTimeout(t)
+  }, [location.pathname, location.hash])
+
+  const hotkeys = useMemo(() => {
+    const map = { 'mod+k': () => setCmd((o) => !o), '?': () => setKeysOpen(true) }
+    nav.flatMap((g) => g.items).forEach((i) => { if (i.hotkey) map[i.hotkey] = () => navigate(i.to) })
+    actions.forEach((a) => { if (a.hotkey) map[a.hotkey] = () => navigate(a.to) })
+    return map
+  }, [nav, actions, navigate])
+  useHotkeys(hotkeys, !keysOpen)
 
   return (
     <div className="min-h-dvh bg-canvas">
       <a href="#app-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-ink focus:px-3 focus:py-2 focus:text-paper">Skip to content</a>
 
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[16.5rem] flex-col border-r border-line bg-canvas px-4 py-5 lg:flex">
-        <NavLink to={home} className="mb-8 px-3" aria-label="MedoShield home"><Logo tagline /></NavLink>
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[16.5rem] flex-col bg-navy-900 px-4 py-5 lg:flex">
+        <NavLink to={home} className="mb-8 px-3" aria-label="MedoShield home"><Logo tagline inverse /></NavLink>
         <div className="no-scrollbar flex-1 overflow-y-auto">
           <SideNav nav={nav} />
         </div>
-        <div className="mt-6 rounded-xl border border-line bg-paper p-4">
-          <p className="flex items-center gap-1.5 text-[0.8125rem] font-medium text-teal-800"><ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> Privacy-first</p>
-          <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-3">Video stays on your device. Only skeletal keypoints are analysed.</p>
+        <div className="mt-6 rounded-xl bg-white/[.05] p-4 ring-1 ring-inset ring-white/10">
+          <p className="flex items-center gap-1.5 text-[0.8125rem] font-medium text-teal-200"><ShieldCheck className="h-4 w-4" strokeWidth={1.8} /> Privacy-first</p>
+          <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-white/60">Video stays on your device. Only skeletal keypoints are analysed.</p>
         </div>
-        <p className="mt-4 px-3 text-[0.75rem] text-ink-4">
-          Built by <Link to="/about" className="underline decoration-line underline-offset-2 hover:text-ink-2">Rahul Choudhary</Link>
+        <p className="mt-4 px-3 text-[0.75rem] text-white/45">
+          Built by <Link to="/about" className="underline decoration-white/25 underline-offset-2 hover:text-white">Rahul Choudhary</Link>
         </p>
       </aside>
 
       {/* Main column */}
       <div className="lg:pl-[16.5rem]">
-        <header className="sticky top-0 z-20 border-b border-line bg-canvas/90 backdrop-blur-md">
+        <header className="sticky top-0 z-20 border-b border-line bg-paper">
           <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-4 sm:px-6">
             <NavLink to={home} className="lg:hidden" aria-label="MedoShield home"><Logo size={28} /></NavLink>
             <button onClick={() => setCmd(true)} className="ml-auto hidden h-10 w-72 items-center gap-2.5 rounded-lg border border-line bg-paper px-3.5 text-sm text-ink-4 transition hover:border-ink-4 md:flex lg:ml-0">
               <Search className="h-4 w-4" strokeWidth={1.8} /> Search or jump to…
-              <kbd className="ml-auto rounded-md border border-line px-1.5 font-mono text-[0.7rem]">Ctrl K</kbd>
+              <kbd className="ml-auto rounded-md border border-line px-1.5 font-mono text-[0.75rem]">{MOD} K</kbd>
             </button>
-            <div className="ml-auto flex items-center gap-2">
+            <button onClick={() => setCmd(true)} className="ml-auto grid h-10 w-10 place-items-center rounded-lg border border-line bg-paper text-ink-2 md:hidden" aria-label="Search or jump to a page">
+              <Search className="h-[18px] w-[18px]" strokeWidth={1.8} />
+            </button>
+            <div className="flex items-center gap-2 md:ml-auto">
+              <SyncIndicator className="mr-2" />
               <Notifications />
               <UserMenu user={user} role={role} />
             </div>
           </div>
+          <OfflineBanner />
         </header>
 
         <main id="app-main" className="mx-auto max-w-[1240px] px-4 pb-28 pt-8 sm:px-6 lg:pb-16">
           <AnimatePresence mode="wait">
             <motion.div key={location.pathname.split('/').slice(0, 3).join('/')} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22, ease: EASE }}>
-              <ErrorBoundary><Outlet /></ErrorBoundary>
+              <ErrorBoundary resetKey={location.pathname}><Outlet /></ErrorBoundary>
             </motion.div>
           </AnimatePresence>
         </main>
       </div>
 
       {/* Mobile tab bar */}
-      <nav aria-label="App" className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-canvas/95 px-2 pt-1.5 backdrop-blur-md lg:hidden">
+      <nav aria-label="App" className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-navy-900 px-2 pt-1.5 lg:hidden">
         <ul className="grid grid-cols-5">
           {mobile.map((i) => (
             <li key={i.to}>
-              <NavLink to={i.to} end={i.end} className={({ isActive }) => cn('flex min-h-[48px] flex-col items-center justify-center gap-0.5 rounded-lg text-[0.75rem] font-medium', isActive ? 'text-teal-800' : 'text-ink-4')}>
+              <NavLink to={i.to} end={i.end} className={({ isActive }) => cn('flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-lg text-[0.75rem] font-medium transition-colors', isActive ? 'text-white' : 'text-white/50')}>
                 <i.icon className="h-5 w-5" strokeWidth={1.8} /> {i.label}
               </NavLink>
             </li>
@@ -256,7 +325,8 @@ export default function AppShell() {
 
       {role === 'patient' && !/^\/app\/(assistant|messages)/.test(location.pathname) && <SOSButton />}
       {role === 'patient' && <MedicationReminders />}
-      <CommandPalette open={cmd} setOpen={setCmd} nav={nav} />
+      <CommandPalette open={cmd} setOpen={setCmd} nav={nav} actions={actions} onShortcuts={() => setKeysOpen(true)} onSignOut={signOut} />
+      <ShortcutsDialog open={keysOpen} onOpenChange={setKeysOpen} nav={nav} actions={actions} />
     </div>
   )
 }

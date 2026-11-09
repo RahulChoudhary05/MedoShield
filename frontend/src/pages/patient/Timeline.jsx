@@ -51,7 +51,7 @@ export default function Timeline() {
   return (
     <div>
       <PageHeader
-        kicker="Timeline"
+       
         title="Your health,"
         accent="in one place"
         description="Every check, review, report and visit in order — so patterns are easier to spot and share."

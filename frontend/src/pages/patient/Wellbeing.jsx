@@ -24,7 +24,7 @@ export default function Wellbeing() {
   return (
     <div>
       <PageHeader
-        kicker="Wellbeing"
+       
         title="Daily"
         accent="wellbeing"
         description="Sleep, stress and walking shape how movement feels. A one-minute daily check-in helps you — and your doctor — see the pattern."

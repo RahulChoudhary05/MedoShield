@@ -8,7 +8,7 @@ const EASE = [0.2, 0.8, 0.2, 1]
 export function Reveal({ children, delay = 0, y = 14, className, as = 'div', once = true }) {
   const M = motion[as] || motion.div
   return (
-    <M className={className} initial={{ opacity: 0, y, filter: 'blur(6px)' }} whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }} viewport={{ once, margin: '-60px' }} transition={{ duration: 0.6, delay, ease: EASE }}>
+    <M className={className} initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once, margin: '-60px' }} transition={{ duration: 0.5, delay, ease: EASE }}>
       {children}
     </M>
   )
@@ -24,7 +24,7 @@ export function Stagger({ children, className, delay = 0, gap = 0.06 }) {
 }
 export function StaggerItem({ children, className }) {
   return (
-    <motion.div className={className} variants={{ hidden: { opacity: 0, y: 12, filter: 'blur(5px)' }, show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.55, ease: EASE } } }}>
+    <motion.div className={className} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE } } }}>
       {children}
     </motion.div>
   )
@@ -62,14 +62,14 @@ export function Blobs() {
   return null
 }
 
-/** Headline that rises in word by word. */
+/** Headline that settles in word by word — visible from the first frame (no opacity/blur), so it can be the LCP at once. */
 export function WordsReveal({ text, className, delay = 0 }) {
   const words = String(text).split(' ')
   return (
     <span className={className} aria-label={text}>
       {words.map((w, i) => (
-        <span key={i} aria-hidden className="inline-block overflow-hidden pb-[0.1em] align-bottom">
-          <motion.span className="inline-block" initial={{ y: '105%', opacity: 0, filter: 'blur(8px)' }} animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }} transition={{ duration: 0.85, delay: delay + i * 0.05, ease: EASE }}>
+        <span key={i} aria-hidden className="inline-block align-bottom">
+          <motion.span className="inline-block" initial={{ y: '40%' }} animate={{ y: 0 }} transition={{ duration: 0.6, delay: delay + i * 0.04, ease: EASE }}>
             {w}{i < words.length - 1 ? ' ' : ''}
           </motion.span>
         </span>
@@ -78,16 +78,22 @@ export function WordsReveal({ text, className, delay = 0 }) {
   )
 }
 
-/** Section/page heading block used across the app: mono kicker, serif title, muted lede, actions. */
+/**
+ * Page heading block used across the app: serif title first (it carries its own weight),
+ * then an optional context line (date, status) and a muted lede, with actions on the right.
+ * Labels never sit above the heading.
+ */
 export function PageHeader({ kicker, title, accent, description, actions, className }) {
+  const full = `${title || ''} ${accent || ''}`.toLowerCase()
+  const meta = kicker && !full.includes(String(kicker).toLowerCase()) ? kicker : null
   return (
     <header className={cn('mb-8 flex flex-col gap-5 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between', className)}>
       <div className="min-w-0">
-        {kicker && <p className="kicker">{kicker}</p>}
-        <h1 className="page-title mt-2">
-          {title}{accent && <> <span className="italic text-teal-700">{accent}</span></>}
+        <h1 className="page-title">
+          {title}{accent && <> <span className="text-teal-600">{accent}</span></>}
         </h1>
-        {description && <p className="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-ink-3">{description}</p>}
+        {meta && <p className="mt-2 text-[0.9375rem] font-medium text-ink-2">{meta}</p>}
+        {description && <p className="mt-2 max-w-2xl text-[0.9375rem] leading-relaxed text-ink-3">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>

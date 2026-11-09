@@ -2,22 +2,22 @@ import { useReducedMotion } from 'framer-motion'
 
 /** Chart palette — hex values from DESIGN.md (SVG strokes may use raw hex). */
 export const C = {
-  ink: '#171614',
-  ink2: '#3B3833',
-  ink3: '#67615A',
-  ink4: '#8F887D',
-  pine: '#234A38',
-  pineMid: '#3F6D56',
-  pineSoft: '#8EB09A',
-  ember: '#B95A31',
-  emberSoft: '#DE9068',
-  stone: '#8F887D',
-  stoneSoft: '#D4CDC3',
-  line: '#E3DCCF',
+  ink: '#0B1526',
+  ink2: '#283347',
+  ink3: '#536075',
+  ink4: '#6B778B',
+  pine: '#1D3AA6',
+  pineMid: '#3860E6',
+  pineSoft: '#8AA6FB',
+  ember: '#D9522A',
+  emberSoft: '#F98E66',
+  stone: '#6B778B',
+  stoneSoft: '#D0D6E0',
+  line: '#DFE4EC',
   paper: '#FFFFFF',
-  cream: '#EFE9DE',
-  rose: '#AF4A39',
-  butter: '#B8963A',
+  cream: '#EBEFF5',
+  rose: '#C93A33',
+  butter: '#C98A12',
 }
 
 export const TICK = { fill: C.ink3, fontSize: 13, fontFamily: '"Geist Mono Variable", ui-monospace, monospace' }

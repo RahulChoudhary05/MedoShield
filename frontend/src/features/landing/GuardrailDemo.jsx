@@ -100,7 +100,7 @@ export default function GuardrailDemo({ className }) {
                   <p className="text-[0.8125rem] leading-snug text-ink-3">{l.text}</p>
                 </div>
                 <span className="w-16 shrink-0 text-right font-mono text-[0.8125rem]">
-                  {stopped ? <span className={sample.tone === 'warn' ? 'text-[#6E5716]' : 'text-rose-500'}>{sample.tone === 'warn' ? 'triage' : 'stop'}</span>
+                  {stopped ? <span className={sample.tone === 'warn' ? 'text-[#7A4F06]' : 'text-rose-500'}>{sample.tone === 'warn' ? 'triage' : 'stop'}</span>
                     : skipped ? <span className="text-ink-4">—</span>
                       : reached ? <Check className="ml-auto h-4 w-4 text-teal-600" strokeWidth={1.8} aria-label="passed" /> : null}
                 </span>
@@ -117,7 +117,7 @@ export default function GuardrailDemo({ className }) {
               className={cn(
                 'rounded-lg px-4 py-2.5 text-[0.875rem] font-medium',
                 sample.tone === 'ok' && 'bg-teal-50 text-teal-800',
-                sample.tone === 'warn' && 'bg-butter-50 text-[#6E5716]',
+                sample.tone === 'warn' && 'bg-butter-50 text-[#7A4F06]',
                 sample.tone === 'block' && 'bg-rose-50 text-rose-600',
               )}
             >

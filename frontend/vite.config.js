@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react'
  * hashed file names Vite emits. Everything else keeps loading lazily via @font-face.
  */
 function preloadCriticalFonts() {
-  const critical = [/instrument-serif-latin-400-normal.*\.woff2$/, /geist-latin-wght-normal.*\.woff2$/]
+  const critical = [/schibsted-grotesk-latin-wght-normal.*\.woff2$/, /geist-latin-wght-normal.*\.woff2$/]
   return {
     name: 'medoshield:preload-critical-fonts',
     apply: 'build',

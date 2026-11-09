@@ -57,13 +57,24 @@ export default function TodaySchedule({ plan }) {
     return () => clearInterval(t)
   }, [])
 
+  // Optimistic: the dose flips to Taken/Skipped instantly; on failure every cached plan is rolled back.
   const log = useMutation({
     mutationFn: (body) => api.meds.log(body),
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: ['meds'] })
+      const snapshot = qc.getQueriesData({ queryKey: ['meds'] })
+      const entry = { medication_name: v.medication_name, time_slot: v.time_slot, status: v.status, taken_at: new Date().toISOString(), optimistic: true }
+      qc.setQueriesData({ queryKey: ['meds'] }, (old) => (old && Array.isArray(old.today) ? { ...old, today: [...old.today, entry] } : old))
+      return { snapshot }
+    },
     onSuccess: (_, v) => {
       toast.success(v.status === 'taken' ? `${v.medication_name} logged — well done` : `${v.medication_name} marked as skipped`)
-      qc.invalidateQueries({ queryKey: ['meds'] })
     },
-    onError: (err) => toast.error(errorMessage(err)),
+    onError: (err, _v, ctx) => {
+      ctx?.snapshot?.forEach(([key, data]) => qc.setQueryData(key, data))
+      toast.error(errorMessage(err, 'That dose wasn’t saved. Please try again.'))
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['meds'] }),
   })
 
   const doses = buildDoses(plan, minute)

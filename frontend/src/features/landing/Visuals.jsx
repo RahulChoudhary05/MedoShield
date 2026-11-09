@@ -4,8 +4,8 @@ import { cn } from '../../lib/utils'
 /*
  * Small, honest data visuals for the landing page. All SVG, drawn in on first view.
  * Colours are the DESIGN.md hex values (SVG strokes may use raw hex).
- *   ink #171614 · ink-3 #67615A · ink-4 #8F887D · line #E3DCCF · cream #EFE9DE
- *   pine #234A38 / #3F6D56 · ember #CF7146 · stone #B5AC9F
+ *   ink #0B1526 · ink-3 #536075 · ink-4 #6B778B · line #DFE4EC · cream #EBEFF5
+ *   pine #1D3AA6 / #3860E6 · ember #F06A3B · stone #A9B2C1
  */
 const EASE = [0.2, 0.8, 0.2, 1]
 const VIEW = { once: true, margin: '-60px' }
@@ -41,26 +41,26 @@ export function TremorSpectrum({ className, axis = true, label = true }) {
     <svg viewBox={`0 0 ${W} ${H}`} className={cn('h-auto w-full', className)} role="img"
       aria-label={`Illustrative tremor power spectrum with a peak at ${PEAK_HZ} hertz inside the 4 to 12 hertz band`}>
       {/* the analysed band */}
-      <rect x={x(4)} y={pt - 6} width={x(12) - x(4)} height={H - pb - pt + 6} fill="#EFE9DE" />
+      <rect x={x(4)} y={pt - 6} width={x(12) - x(4)} height={H - pb - pt + 6} fill="#EBEFF5" />
       {axis && (
-        <text x={x(4) + 6} y={pt + 10} fontSize="16" fill="#67615A" style={MONO}>4–12 Hz band</text>
+        <text x={x(4) + 6} y={pt + 10} fontSize="16" fill="#536075" style={MONO}>4–12 Hz band</text>
       )}
       {/* voluntary zone */}
-      {axis && <line x1={x(3)} x2={x(3)} y1={pt} y2={H - pb} stroke="#E3DCCF" strokeDasharray="3 4" />}
+      {axis && <line x1={x(3)} x2={x(3)} y1={pt} y2={H - pb} stroke="#DFE4EC" strokeDasharray="3 4" />}
       {/* baseline */}
-      <line x1={pl} x2={W - pr} y1={H - pb} y2={H - pb} stroke="#E3DCCF" />
+      <line x1={pl} x2={W - pr} y1={H - pb} y2={H - pb} stroke="#DFE4EC" />
       {axis && [0, 4, 8, 12, 16].map((f) => (
         <g key={f}>
-          <line x1={x(f)} x2={x(f)} y1={H - pb} y2={H - pb + 4} stroke="#B5AC9F" />
-          <text x={x(f)} y={H - pb + 18} fontSize="16" textAnchor={f === 16 ? 'end' : f === 0 ? 'start' : 'middle'} fill="#67615A" style={MONO}>{f === 16 ? '16 Hz' : f}</text>
+          <line x1={x(f)} x2={x(f)} y1={H - pb} y2={H - pb + 4} stroke="#A9B2C1" />
+          <text x={x(f)} y={H - pb + 18} fontSize="16" textAnchor={f === 16 ? 'end' : f === 0 ? 'start' : 'middle'} fill="#536075" style={MONO}>{f === 16 ? '16 Hz' : f}</text>
         </g>
       ))}
-      <motion.path d={d} fill="none" stroke="#234A38" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"
+      <motion.path d={d} fill="none" stroke="#1D3AA6" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"
         initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={VIEW} transition={{ duration: 1.4, ease: [0.65, 0, 0.35, 1] }} />
       <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={VIEW} transition={{ delay: 1.2, duration: 0.5, ease: EASE }}>
-        <line x1={px} x2={px} y1={py} y2={H - pb} stroke="#CF7146" strokeDasharray="2 3" />
-        <circle cx={px} cy={py} r="4.5" fill="#CF7146" />
-        {label && <text x={px + 10} y={py + 30} fontSize="16" fill="#984826" style={MONO}>peak {PEAK_HZ} Hz</text>}
+        <line x1={px} x2={px} y1={py} y2={H - pb} stroke="#F06A3B" strokeDasharray="2 3" />
+        <circle cx={px} cy={py} r="4.5" fill="#F06A3B" />
+        {label && <text x={px + 10} y={py + 30} fontSize="16" fill="#B0401E" style={MONO}>peak {PEAK_HZ} Hz</text>}
       </motion.g>
     </svg>
   )
@@ -85,25 +85,25 @@ export function TrendLine({ className, axis = true }) {
     <svg viewBox={`0 0 ${W} ${H}`} className={cn('h-auto w-full', className)} role="img"
       aria-label="Illustrative trend of 18 checks: the first five set a personal baseline band, later checks drift below it">
       {/* baseline band (median ± MAD of sessions 1–5) */}
-      <rect x={pl} y={y(74.5)} width={W - pl - pr} height={y(70.5) - y(74.5)} fill="#EFE9DE" />
-      <line x1={pl} x2={W - pr} y1={y(72.5)} y2={y(72.5)} stroke="#B5AC9F" strokeDasharray="3 4" />
-      {labels && <text x={W - pr} y={y(74.5) - 6} fontSize="16" textAnchor="end" fill="#67615A" style={MONO}>your baseline</text>}
-      <line x1={x(4.5)} x2={x(4.5)} y1={pt - 6} y2={H - pb} stroke="#E3DCCF" />
+      <rect x={pl} y={y(74.5)} width={W - pl - pr} height={y(70.5) - y(74.5)} fill="#EBEFF5" />
+      <line x1={pl} x2={W - pr} y1={y(72.5)} y2={y(72.5)} stroke="#A9B2C1" strokeDasharray="3 4" />
+      {labels && <text x={W - pr} y={y(74.5) - 6} fontSize="16" textAnchor="end" fill="#536075" style={MONO}>your baseline</text>}
+      <line x1={x(4.5)} x2={x(4.5)} y1={pt - 6} y2={H - pb} stroke="#DFE4EC" />
       {axis && (
         <>
-          <text x={pl} y={H - 8} fontSize="16" fill="#8F887D" style={MONO}>calibrating</text>
-          <text x={W - pr} y={H - 8} fontSize="16" textAnchor="end" fill="#8F887D" style={MONO}>compared with you</text>
+          <text x={pl} y={H - 8} fontSize="16" fill="#6B778B" style={MONO}>calibrating</text>
+          <text x={W - pr} y={H - 8} fontSize="16" textAnchor="end" fill="#6B778B" style={MONO}>compared with you</text>
         </>
       )}
-      <motion.path d={d} fill="none" stroke="#234A38" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"
+      <motion.path d={d} fill="none" stroke="#1D3AA6" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"
         initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={VIEW} transition={{ duration: 1.5, ease: [0.65, 0, 0.35, 1] }} />
       {pts.map(([a, b], i) => (
         <motion.circle key={i} cx={a} cy={b} r={i === pts.length - 1 ? 4.5 : 2.6}
-          fill={i === pts.length - 1 ? '#CF7146' : i < 5 ? '#B5AC9F' : '#234A38'}
+          fill={i === pts.length - 1 ? '#F06A3B' : i < 5 ? '#A9B2C1' : '#1D3AA6'}
           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={VIEW}
           transition={{ delay: 0.2 + (i / pts.length) * 1.3, duration: 0.3 }} />
       ))}
-      {labels && <motion.text x={last[0] - 6} y={last[1] + 20} fontSize="16" textAnchor="end" fill="#984826" style={MONO}
+      {labels && <motion.text x={last[0] - 6} y={last[1] + 20} fontSize="16" textAnchor="end" fill="#B0401E" style={MONO}
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={VIEW} transition={{ delay: 1.6, duration: 0.4 }}>
         −2.1 MAD · flagged
       </motion.text>}
@@ -154,13 +154,13 @@ const SWAY = swayPath()
 export function SwayPlot({ className }) {
   return (
     <svg viewBox="0 0 240 160" className={cn('h-auto w-full', className)} role="img" aria-label="Illustrative top-down trace of trunk sway while standing still">
-      <line x1="120" x2="120" y1="12" y2="148" stroke="#E3DCCF" />
-      <line x1="16" x2="224" y1="80" y2="80" stroke="#E3DCCF" />
-      <ellipse cx="120" cy="80" rx="64" ry="34" fill="none" stroke="#B5AC9F" strokeDasharray="3 4" />
-      <motion.path d={SWAY} fill="none" stroke="#234A38" strokeWidth="1.4" strokeLinejoin="round" strokeOpacity="0.85"
+      <line x1="120" x2="120" y1="12" y2="148" stroke="#DFE4EC" />
+      <line x1="16" x2="224" y1="80" y2="80" stroke="#DFE4EC" />
+      <ellipse cx="120" cy="80" rx="64" ry="34" fill="none" stroke="#A9B2C1" strokeDasharray="3 4" />
+      <motion.path d={SWAY} fill="none" stroke="#1D3AA6" strokeWidth="1.4" strokeLinejoin="round" strokeOpacity="0.85"
         initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={VIEW} transition={{ duration: 2.2, ease: [0.65, 0, 0.35, 1] }} />
-      <text x="16" y="152" fontSize="12" fill="#8F887D" style={MONO}>left</text>
-      <text x="224" y="152" fontSize="12" textAnchor="end" fill="#8F887D" style={MONO}>right</text>
+      <text x="16" y="152" fontSize="12" fill="#6B778B" style={MONO}>left</text>
+      <text x="224" y="152" fontSize="12" textAnchor="end" fill="#6B778B" style={MONO}>right</text>
     </svg>
   )
 }
@@ -173,7 +173,7 @@ export function Spark({ values, tone = 'pine', className }) {
   const max = Math.max(...values)
   const pts = values.map((v, i) => [2 + (i / (values.length - 1)) * (W - 4), H - 3 - ((v - min) / (max - min || 1)) * (H - 6)])
   const d = pts.map(([a, b], i) => `${i ? 'L' : 'M'}${a.toFixed(1)},${b.toFixed(1)}`).join('')
-  const stroke = tone === 'ember' ? '#B95A31' : tone === 'stone' ? '#8F887D' : '#3F6D56'
+  const stroke = tone === 'ember' ? '#D9522A' : tone === 'stone' ? '#6B778B' : '#3860E6'
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className={className} aria-hidden="true">
       <motion.path d={d} fill="none" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"

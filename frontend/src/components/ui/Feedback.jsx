@@ -22,21 +22,17 @@ export function Spinner({ className, label }) {
  */
 export function EmptyState({ icon: Icon, title, text, action, className, tone = 'teal', headingLevel = 3 }) {
   const tones = {
-    teal: 'bg-teal-50 text-teal-700 ring-teal-100',
-    apricot: 'bg-apricot-50 text-apricot-600 ring-apricot-100',
-    lilac: 'bg-cream text-ink-2 ring-line',
-    sky: 'bg-cream text-teal-700 ring-line',
-    ink: 'bg-cream text-ink-2 ring-line',
+    teal: 'icon-teal', apricot: 'icon-coral', lilac: 'icon-violet', sky: 'icon-sky', ink: 'icon-violet',
   }
   const level = Math.min(6, Math.max(1, headingLevel))
   return (
     <div className={cn('flex flex-col items-center px-6 py-12 text-center', className)}>
       {Icon && (
-        <span className={cn('mb-4 grid h-11 w-11 place-items-center rounded-xl ring-1 ring-inset', tones[tone] || tones.teal)}>
-          <Icon aria-hidden className="h-5 w-5" strokeWidth={1.8} />
+        <span className={cn('mb-5 grid h-14 w-14 place-items-center rounded-2xl', tones[tone] || tones.teal)}>
+          <Icon aria-hidden className="h-6 w-6" strokeWidth={1.8} />
         </span>
       )}
-      {createElement(`h${level}`, { className: 'font-serif text-[1.5rem] font-normal leading-tight text-ink' }, title)}
+      {createElement(`h${level}`, { className: 'font-serif text-[1.5rem] font-semibold leading-tight text-ink' }, title)}
       {text && <p className="mt-2 max-w-[46ch] text-[0.9375rem] leading-relaxed text-ink-3 text-pretty">{text}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>

@@ -1,7 +1,6 @@
 @import '@fontsource-variable/geist';
 @import '@fontsource-variable/geist-mono';
-@import '@fontsource/instrument-serif/400.css';
-@import '@fontsource/instrument-serif/400-italic.css';
+@import '@fontsource-variable/schibsted-grotesk';
 
 @tailwind base;
 @tailwind components;
@@ -21,24 +20,15 @@
     @apply bg-canvas font-sans text-base leading-relaxed text-ink antialiased;
     font-feature-settings: 'ss01', 'ss02', 'cv11';
   }
-  /* Creamy paper: a soft sage light at the top plus a barely-there paper grain */
-  body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
-    background:
-      radial-gradient(42rem 22rem at 78% -4rem, rgba(63,109,86,.08), transparent 70%),
-      radial-gradient(36rem 20rem at 8% -6rem, rgba(185,207,192,.18), transparent 70%);
-  }
-  body::after {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .04; mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .25 0 0 0 0 .18 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
+  /* Clinical Swiss: a cool, flat canvas. No grain, no glow — structure comes from the grid and hairlines. */
   #root { position: relative; z-index: 1; }
-  h1, h2, h3, h4 { @apply font-display text-ink; letter-spacing: -0.015em; text-wrap: balance; }
+  h1, h2, h3, h4 { @apply font-display font-semibold text-ink; letter-spacing: -0.02em; text-wrap: balance; }
   p { text-wrap: pretty; }
-  ::selection { background: #DCE7DF; color: #132C21; }
-  :focus-visible { outline: 2px solid #2D5944; outline-offset: 3px; border-radius: 6px; }
-  input[type='range'], input[type='checkbox'], input[type='radio'] { accent-color: #234A38; }
-  * { scrollbar-width: thin; scrollbar-color: #D4CDC3 transparent; }
+  ::selection { background: #DCE5FF; color: #13235C; }
+  ::placeholder { color: #6B778B; opacity: 1; }
+  :focus-visible { outline: 2px solid #2549CC; outline-offset: 3px; border-radius: 6px; }
+  input[type='range'], input[type='checkbox'], input[type='radio'] { accent-color: #1D3AA6; }
+  * { scrollbar-width: thin; scrollbar-color: #D0D6E0 transparent; }
   img, video { max-width: 100%; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
@@ -47,20 +37,22 @@
 
 @layer components {
   /* ── Surfaces ─────────────────────────────────────────── */
-  .card { @apply relative rounded-3xl border border-line bg-paper; }
+  .card { @apply relative rounded-2xl border border-line bg-paper shadow-card; }
   .card-pad { @apply p-5 sm:p-6; }
   .card-interactive { @apply transition duration-300 ease-out hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-lift; }
-  /* Cursor spotlight (latest "Linear-style" hover): --mx/--my are set by src/lib/spotlight.js */
-  .card-interactive::before, .spotlight::before {
-    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s var(--ease-out);
-    background: radial-gradient(22rem circle at var(--mx, 50%) var(--my, 0%), rgba(63,109,86, .07), transparent 60%);
-  }
-  .card-interactive:hover::before, .spotlight:hover::before { opacity: 1; }
   .card-glow { @apply transition-shadow duration-300 hover:shadow-lift; }
   .card-tint-teal { @apply bg-teal-50/60; }
   .card-tint-violet { @apply bg-cream/60; }
   .card-tint-warm { @apply bg-apricot-50/60; }
-  .glass { @apply border border-line/80 bg-paper/85 backdrop-blur-md; }
+  /* Glassmorphism — only on dark aurora bands, where there is something behind the glass to see. */
+  .glass { @apply border border-white/[.12] bg-white/[.06] backdrop-blur-xl; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 20px 40px -24px rgba(0,0,0,.5); }
+  /* Aurora band: the brand's loud moment (hero, CTA, auth, 404). */
+  .aurora { @apply relative isolate overflow-hidden bg-navy-900 text-white; }
+  .aurora::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(40rem 26rem at 85% -10%, rgba(56,96,230,.55), transparent 70%), radial-gradient(30rem 22rem at -5% 40%, rgba(240,106,59,.16), transparent 70%), radial-gradient(36rem 20rem at 50% 120%, rgba(47,169,104,.12), transparent 70%); }
+  .aurora::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .06;
+    background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 64px 64px;
+    mask-image: radial-gradient(70% 60% at 50% 30%, #000, transparent); }
   .tile { @apply rounded-xl border border-line bg-cream/50; }
   .sunken { @apply rounded-xl bg-cream/70; }
   .grain::after { content: ''; @apply pointer-events-none absolute inset-0 rounded-[inherit] bg-grain opacity-[.035] mix-blend-multiply; }
@@ -72,7 +64,7 @@
   .btn-sm { @apply h-9 px-3.5 text-[0.8125rem]; }
   .btn-md { @apply h-11 px-5 text-[0.9375rem]; }
   .btn-lg { @apply h-12 px-6 text-base; }
-  .btn-primary { @apply bg-teal-600 text-white shadow-[0_1px_0_rgba(255,255,255,.18)_inset,0_8px_20px_-10px_rgba(35,74,56,.6)] hover:bg-teal-700; }
+  .btn-primary { @apply bg-teal-600 text-white shadow-[0_1px_0_rgba(255,255,255,.2)_inset,0_6px_16px_-8px_rgba(37,73,204,.55)] hover:bg-teal-700; }
   .btn-dark { @apply bg-ink text-paper hover:bg-ink-2; }
   .btn-brand { @apply bg-teal-700 text-paper hover:bg-teal-800; }
   .btn-violet { @apply bg-teal-700 text-paper hover:bg-teal-800; }
@@ -88,30 +80,33 @@
   .input { @apply h-11 w-full rounded-lg border border-line bg-paper px-3.5 text-base text-ink placeholder:text-ink-4 transition duration-200 hover:border-ink-4/50 focus:border-teal-500 focus:outline-none focus:ring-[3px] focus:ring-teal-100; }
   .input-error { @apply border-rose-400 focus:border-rose-400 focus:ring-rose-100; }
   textarea.input { @apply h-auto min-h-[110px] py-2.5 leading-relaxed; }
-  select.input { @apply appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2367615A' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+  select.input { @apply appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23536075' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
   .help { @apply mt-1.5 text-xs text-ink-3; }
   .error-text { @apply mt-1.5 text-xs font-medium text-rose-500; }
 
   /* ── Chips, badges, labels ───────────────────────────── */
   .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-paper px-3 py-1.5 text-[0.8125rem] text-ink-2 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800; }
   .badge { @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[0.8125rem] font-medium; }
-  .eyebrow { @apply inline-flex items-center gap-2 font-mono text-[0.8125rem] font-medium text-ink-3; }
-  .kicker { @apply font-mono text-[0.8125rem] font-medium text-ink-3; }
+  .eyebrow { @apply inline-flex items-center gap-2 text-[0.8125rem] font-medium text-ink-3; }
+  .kicker { @apply text-[0.8125rem] font-medium text-ink-3; }
   .dot { @apply inline-block h-1.5 w-1.5 rounded-full bg-current; }
 
   /* ── Icons: quiet, tonal, square ─────────────────────── */
   .icon-tile { @apply grid place-items-center rounded-lg; }
-  .icon-teal { @apply bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-100; }
-  .icon-violet { @apply bg-cream text-ink-2 ring-1 ring-inset ring-line; }
-  .icon-coral { @apply bg-apricot-50 text-apricot-600 ring-1 ring-inset ring-apricot-100; }
-  .icon-sky { @apply bg-cream text-teal-700 ring-1 ring-inset ring-line; }
-  .icon-sun { @apply bg-butter-50 text-butter-400 ring-1 ring-inset ring-butter-100; }
+  /* Clay style: soft, pillowy tiles — light from above, a tinted shadow below. */
+  .clay { box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 -3px 6px rgba(11,21,38,.08), 0 8px 16px -10px var(--clay, rgba(37,73,204,.45)); }
+  .icon-teal { @apply clay bg-gradient-to-b from-teal-50 to-teal-100 text-teal-700; --clay: rgba(37,73,204,.45); }
+  .icon-violet { @apply clay bg-gradient-to-b from-lilac-50 to-lilac-100 text-ink-2; --clay: rgba(11,21,38,.3); }
+  .icon-coral { @apply clay bg-gradient-to-b from-apricot-50 to-apricot-100 text-apricot-600; --clay: rgba(217,82,42,.45); }
+  .icon-sky { @apply clay bg-gradient-to-b from-sky-50 to-sky-100 text-sky-500; --clay: rgba(44,114,158,.4); }
+  .icon-sun { @apply clay bg-gradient-to-b from-butter-50 to-butter-100 text-butter-400; --clay: rgba(201,138,18,.45); }
+  .icon-mint { @apply clay bg-gradient-to-b from-mint-50 to-mint-100 text-mint-600; --clay: rgba(30,138,82,.45); }
 
   /* ── Typography ──────────────────────────────────────── */
-  .h-display { @apply font-serif font-normal tracking-[-0.02em] text-ink; }
-  .page-title { @apply font-serif text-[2.25rem] font-normal leading-[1.05] tracking-[-0.02em] text-ink sm:text-[2.75rem]; }
-  .serif-accent { @apply font-serif font-normal italic tracking-[-0.01em] text-teal-700; }
-  .serif-plain { @apply font-serif font-normal italic tracking-normal; }
+  .h-display { @apply font-display font-semibold tracking-[-0.035em] text-ink; }
+  .page-title { @apply font-display text-[2rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink sm:text-[2.5rem]; }
+  .serif-accent { @apply text-teal-600; }
+  .serif-plain { @apply font-display font-semibold; }
   .text-gradient { @apply text-teal-700; }
   .text-gradient-warm { @apply text-apricot-500; }
   .text-balance { text-wrap: balance; }
@@ -134,11 +129,11 @@
 
   /* ── Long-form legal / about copy ────────────────────── */
   .prose-doc { @apply max-w-[68ch] text-[1rem] leading-[1.75] text-ink-2; }
-  .prose-doc h2 { @apply mt-12 font-serif text-[1.75rem] font-normal leading-tight text-ink; }
+  .prose-doc h2 { @apply mt-12 font-display text-[1.5rem] font-semibold leading-tight tracking-[-0.02em] text-ink; }
   .prose-doc h3 { @apply mt-8 text-[1rem] font-semibold text-ink; }
   .prose-doc p { @apply my-4; }
   .prose-doc ul { @apply my-4 space-y-2 pl-5; list-style: square; }
-  .prose-doc li::marker { color: #8EB09A; }
+  .prose-doc li::marker { color: #8AA6FB; }
   .prose-doc a { @apply link; }
 }
 
@@ -148,5 +143,5 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
   .safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
-  .bg-rules { background-image: linear-gradient(rgba(23,22,20,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(23,22,20,.045) 1px, transparent 1px); background-size: 56px 56px; }
+  .bg-rules { background-image: linear-gradient(rgba(11,21,38,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(11,21,38,.045) 1px, transparent 1px); background-size: 56px 56px; }
 }

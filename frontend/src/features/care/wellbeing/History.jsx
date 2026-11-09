@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -19,17 +20,44 @@ export default function History({ records }) {
   const qc = useQueryClient()
   const del = useMutation({
     mutationFn: (id) => api.fitness.remove(id),
-    onSuccess: () => {
-      toast.success('Log removed')
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fitness'] }),
+    onError: (err) => {
       qc.invalidateQueries({ queryKey: ['fitness'] })
+      toast.error(errorMessage(err, 'That log couldn’t be deleted. It’s back in the list.'))
     },
-    onError: (err) => toast.error(errorMessage(err)),
   })
+  // Destructive-action protection without a modal: hide the row at once and give 5 seconds to undo
+  // before anything is deleted on the server.
+  const [hidden, setHidden] = useState(() => new Set())
+  const timers = useRef({})
+  useEffect(() => {
+    const pending = timers.current
+    // Leaving the page finishes any pending deletes directly (the undo window has been given).
+    return () => Object.entries(pending).forEach(([id, t]) => { clearTimeout(t.timer); api.fitness.remove(id).catch(() => {}) })
+  }, [])
+  function removeWithUndo(r) {
+    setHidden((h) => new Set(h).add(r.id))
+    const commit = () => { delete timers.current[r.id]; del.mutate(r.id) }
+    const timer = setTimeout(commit, 5000)
+    timers.current[r.id] = { timer, commit }
+    toast(`Log for ${fmtDate(r.date)} deleted`, {
+      duration: 5000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          clearTimeout(timer)
+          delete timers.current[r.id]
+          setHidden((h) => { const n = new Set(h); n.delete(r.id); return n })
+        },
+      },
+    })
+  }
+  const visible = records.filter((r) => !hidden.has(r.id))
 
   return (
     <ul className="-my-1 divide-y divide-line">
       <AnimatePresence initial={false}>
-        {records.map((r) => {
+        {visible.map((r) => {
           const busy = del.isPending && del.variables === r.id
           return (
             <motion.li key={r.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }} className="flex items-start gap-4 py-3.5">
@@ -47,7 +75,7 @@ export default function History({ records }) {
                 </div>
                 {r.notes && <p className="mt-1.5 line-clamp-2 text-[0.9375rem] text-ink-3">{r.notes}</p>}
               </div>
-              <button onClick={() => del.mutate(r.id)} disabled={busy} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-ink-3 transition hover:bg-rose-50 hover:text-rose-500" aria-label={`Delete log for ${fmtDate(r.date)}`}>
+              <button onClick={() => removeWithUndo(r)} disabled={busy} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-ink-3 transition hover:bg-rose-50 hover:text-rose-500" aria-label={`Delete log for ${fmtDate(r.date)}`}>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.8} /> : <Trash2 className="h-4 w-4" strokeWidth={1.8} />}
               </button>
             </motion.li>

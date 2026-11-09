@@ -68,7 +68,7 @@ export default function Register() {
       if (v.gender) body.gender = v.gender
       const session = await api.auth.registerPatient(body)
       setSession(session)
-      confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 }, colors: ['#234A38', '#DE9068', '#B5AC9F', '#E6D293'], disableForReducedMotion: true })
+      confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 }, colors: ['#1D3AA6', '#F98E66', '#A9B2C1', '#F8D47A'], disableForReducedMotion: true })
       toast.success('Your account is ready!')
       navigate('/app/check', { replace: true })
     } catch (e) {

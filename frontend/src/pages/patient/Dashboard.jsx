@@ -6,6 +6,7 @@ import { api } from '../../lib/api'
 import { fmtDate, greeting } from '../../lib/utils'
 import { useAuth } from '../../store/auth'
 import { InlineError } from '../../features/care/kit'
+import Activation from '../../features/monitoring/Activation'
 import {
   AppointmentsCard, CareTeamCard, DashboardSkeleton, FirstSteps, LatestCheck, LifestyleCard, MedsToday, QuickActions, TrendSection, statusSentence,
 } from '../../features/monitoring/dashboard'
@@ -49,6 +50,7 @@ export default function Dashboard() {
     <div>
       {header(statusSentence({ risk: data.latest_risk, fresh, checks: stats.movement_checks || 0 }), fresh)}
       <Stagger className="space-y-5">
+        <StaggerItem><Activation data={data} /></StaggerItem>
         <StaggerItem>{fresh ? <FirstSteps /> : <LatestCheck risk={data.latest_risk} stats={stats} />}</StaggerItem>
 
         {!fresh && <StaggerItem><TrendSection trends={trends} /></StaggerItem>}
@@ -62,7 +64,7 @@ export default function Dashboard() {
         </StaggerItem>
 
         <StaggerItem>
-          <h2 className="kicker mb-3 mt-2">Quick actions</h2>
+          <h2 className="mb-3 mt-2 text-[1.0625rem] font-semibold text-ink">Quick actions</h2>
           <QuickActions />
         </StaggerItem>
 

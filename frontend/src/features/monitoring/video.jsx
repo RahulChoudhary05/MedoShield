@@ -37,7 +37,7 @@ const QUALITY = {
   poor: { cls: 'text-apricot-600', dot: 'bg-apricot-500', label: 'Poor video quality' },
 }
 
-const scoreColor = (v) => (v >= 70 ? '#234A38' : v >= 45 ? '#B8963A' : '#AF4A39')
+const scoreColor = (v) => (v >= 70 ? '#1D3AA6' : v >= 45 ? '#C98A12' : '#C93A33')
 
 /** The structured AI movement review (backend VideoAnalysis). */
 export function VideoResult({ analysis, compact = false }) {
@@ -91,7 +91,7 @@ export function VideoResult({ analysis, compact = false }) {
       </div>
 
       {analysis.is_reviewed && analysis.doctor_notes && (
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="card border-l-2 border-l-teal-700 p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="card p-5 sm:p-6">
           <SectionTitle icon={Stethoscope} title="Notes from your doctor" />
           <p className="whitespace-pre-line text-base leading-relaxed text-ink-2">{analysis.doctor_notes}</p>
         </motion.div>
@@ -138,7 +138,7 @@ export function VideoLocked({ hasCareTeam }) {
             <LockKeyhole className="h-6 w-6" strokeWidth={1.8} />
           </span>
           <h2 className="font-serif text-[2rem] leading-tight text-balance">
-            Video review opens <span className="italic text-teal-700">with your doctor</span>
+            Video review opens <span className="text-teal-600">with your doctor</span>
           </h2>
           <p className="mt-3 max-w-prose text-base text-ink-3">
             AI video review looks closely at walking and balance from a short clip. Because it’s more detailed, a doctor in your care team turns it on when it would help — and reviews the results with you.
@@ -177,7 +177,7 @@ export function VideoRecorder({ onReady }) {
     if (!blob || !blob.size) {
       return (
         <div className="space-y-3">
-          <div role="alert" className="flex items-start gap-3 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[#6E5716]">
+          <div role="alert" className="flex items-start gap-3 rounded-xl border border-butter-100 bg-butter-50 px-4 py-3 text-[#7A4F06]">
             <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
             <p className="text-[0.9375rem]"><span className="font-medium">This browser couldn’t save the recording.</span> Please upload a video file instead, or try a different browser.</p>
           </div>

@@ -96,11 +96,11 @@ const HEIGHT = { male: 1.78, female: 1.66 }
 const LANDMARK_BONES = ['Head', 'LeftArm', 'RightArm', 'LeftForeArm', 'RightForeArm', 'LeftHand', 'RightHand', 'LeftUpLeg', 'RightUpLeg', 'LeftLeg', 'RightLeg', 'LeftFoot', 'RightFoot']
 
 const porcelain = () => new THREE.MeshPhysicalMaterial({
-  color: '#EFE9DE', roughness: 0.42, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.5,
+  color: '#EBEFF5', roughness: 0.42, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.5,
   sheen: 0.6, sheenColor: new THREE.Color('#FFFFFF'), sheenRoughness: 0.5,
 })
 /* Medical outfit, painted per vertex from the bind pose: scrub top (short sleeves), scrub pants, clinical shoes. */
-const OUTFIT = { skin: '#EFE9DE', top: '#3F6D56', pants: '#1B3B2D', shoes: '#FCFAF6', trim: '#2D5944' }
+const OUTFIT = { skin: '#EBEFF5', top: '#3860E6', pants: '#182F80', shoes: '#FFFFFF', trim: '#2549CC' }
 const clothMat = () => new THREE.MeshPhysicalMaterial({
   vertexColors: true, color: '#FFFFFF', roughness: 0.62, metalness: 0, sheen: 0.7, sheenRoughness: 0.6,
   sheenColor: new THREE.Color('#FFFFFF'), clearcoat: 0.12, clearcoatRoughness: 0.6,
@@ -155,14 +155,14 @@ function dressRealMan(root) {
   root.traverse((o) => {
     if (!o.isMesh) return
     const n = `${o.name} ${o.material?.name || ''}`
-    if (/Outfit_Top/i.test(n)) o.material = fabric('#FCFAF6') // white lab coat
+    if (/Outfit_Top/i.test(n)) o.material = fabric('#FFFFFF') // white lab coat
     else if (/Outfit_Bottom/i.test(n)) o.material = fabric(OUTFIT.pants)
     else if (/Footwear/i.test(n)) o.material = fabric('#2B2622') // clinic shoes
     else if (/Headwear/i.test(n)) o.visible = false // no hat in clinic
   })
 }
 const hairMat = () => new THREE.MeshPhysicalMaterial({ color: '#5B4A3E', roughness: 0.55, sheen: 0.5, sheenColor: new THREE.Color('#9C8676') })
-const jointMat = () => new THREE.MeshPhysicalMaterial({ color: '#D4CDC3', roughness: 0.5, clearcoat: 0.3 })
+const jointMat = () => new THREE.MeshPhysicalMaterial({ color: '#D0D6E0', roughness: 0.5, clearcoat: 0.3 })
 
 /** Keep only rotation tracks and map Mixamo names ("mixamorig:Hips" / "mixamorigHips") onto this rig. */
 function retarget(clip, bones) {
@@ -328,7 +328,7 @@ function Person({ sex, walking, markers }) {
           </mesh>
           <mesh renderOrder={31}>
             <sphereGeometry args={[0.012, 16, 16]} />
-            <meshBasicMaterial color="#B95A31" depthTest={false} />
+            <meshBasicMaterial color="#D9522A" depthTest={false} />
           </mesh>
         </group>
       ))}
@@ -342,14 +342,14 @@ function Walkway() {
     <group rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
       <mesh>
         <ringGeometry args={[TRACK.radius - 0.012, TRACK.radius + 0.012, 96]} />
-        <meshBasicMaterial color="#B9CFC0" transparent opacity={0.75} />
+        <meshBasicMaterial color="#B8CAFF" transparent opacity={0.75} />
       </mesh>
       {Array.from({ length: 24 }, (_, i) => {
         const a = (i / 24) * Math.PI * 2
         return (
           <mesh key={i} position={[Math.cos(a) * (TRACK.radius + 0.07), Math.sin(a) * (TRACK.radius + 0.07), 0]} rotation={[0, 0, a]}>
             <planeGeometry args={[0.05, 0.006]} />
-            <meshBasicMaterial color="#B5AC9F" transparent opacity={0.7} />
+            <meshBasicMaterial color="#A9B2C1" transparent opacity={0.7} />
           </mesh>
         )
       })}
@@ -382,19 +382,19 @@ export default function RealHumanCanvas({ sex = 'female', walking = true, marker
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping }}
         camera={{ position: [0, 1.5, 5.9], fov: 27, near: 0.1, far: 40 }}
       >
-        <hemisphereLight args={['#FFFFFF', '#D9D1C4', 0.7]} />
+        <hemisphereLight args={['#FFFFFF', '#D5DCE6', 0.7]} />
         <directionalLight position={[2.5, 4.5, 3.5]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0004} />
-        <directionalLight position={[-3, 2, -2.5]} intensity={0.7} color="#EDE6DA" />
+        <directionalLight position={[-3, 2, -2.5]} intensity={0.7} color="#E6EBF2" />
         <Suspense fallback={null}>
           <Person key={sex} sex={sex} walking={walking && !reduced} markers={markers} />
         </Suspense>
         <Walkway />
-        <ContactShadows position={[0, 0.001, 0]} opacity={0.35} scale={3} blur={2.6} far={1.6} color="#171614" />
+        <ContactShadows position={[0, 0.001, 0]} opacity={0.35} scale={3} blur={2.6} far={1.6} color="#0B1526" />
         <Environment resolution={256}>
           <Lightformer intensity={2.4} position={[0, 4, 3]} scale={[6, 2, 1]} color="#FFFFFF" />
-          <Lightformer intensity={1.2} position={[-4, 1.5, 1]} rotation-y={Math.PI / 2} scale={[4, 3, 1]} color="#EEF3EF" />
-          <Lightformer intensity={1.0} position={[4, 1.5, -1]} rotation-y={-Math.PI / 2} scale={[4, 3, 1]} color="#F6F2EA" />
-          <Lightformer intensity={0.6} position={[0, -1, 0]} rotation-x={Math.PI / 2} scale={[6, 6, 1]} color="#EDE6DA" />
+          <Lightformer intensity={1.2} position={[-4, 1.5, 1]} rotation-y={Math.PI / 2} scale={[4, 3, 1]} color="#EEF3FF" />
+          <Lightformer intensity={1.0} position={[4, 1.5, -1]} rotation-y={-Math.PI / 2} scale={[4, 3, 1]} color="#F4F6F9" />
+          <Lightformer intensity={0.6} position={[0, -1, 0]} rotation-x={Math.PI / 2} scale={[6, 6, 1]} color="#E6EBF2" />
         </Environment>
         <OrbitControls
           target={[0, 0.8, 0]}

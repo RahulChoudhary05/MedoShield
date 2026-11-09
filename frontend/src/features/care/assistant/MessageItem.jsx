@@ -21,7 +21,7 @@ const SOURCES = {
   model: { label: 'model', cls: 'border-line text-ink-3' },
   triage: { label: 'triage', cls: 'border-teal-100 bg-teal-50 text-teal-700' },
   emergency: { label: 'emergency', cls: 'border-rose-200 bg-rose-50 text-rose-600' },
-  guardrail: { label: 'guardrail', cls: 'border-butter-100 bg-butter-50 text-[#6E5716]' },
+  guardrail: { label: 'guardrail', cls: 'border-butter-100 bg-butter-50 text-[#7A4F06]' },
   fallback: { label: 'offline guidance', cls: 'border-line text-ink-3' },
 }
 function SourceBadge({ m }) {
@@ -73,7 +73,7 @@ export function AssistantMessage({ m, showChips, onChip, disabled }) {
             </p>
           )}
           {m.urgency === 'soon' && !emergency && (
-            <p className="mb-2 flex items-center gap-2 font-medium text-[#6E5716]">
+            <p className="mb-2 flex items-center gap-2 font-medium text-[#7A4F06]">
               <Clock3 className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden /> Worth seeing a doctor within a few days
             </p>
           )}

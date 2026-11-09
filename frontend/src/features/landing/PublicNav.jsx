@@ -10,9 +10,10 @@ import { cn } from '../../lib/utils'
 // Section links resolve against the landing page from anywhere on the site.
 const LINKS = [
   ['How it works', '/#how'],
-  ['Science', '/#science'],
+  ['Features', '/features'],
+  ['Use cases', '/use-cases'],
   ['Privacy', '/#privacy'],
-  ['Clinicians', '/#clinicians'],
+  ['Clinicians', '/use-cases/remote-patient-monitoring'],
   ['About', '/about'],
 ]
 
@@ -36,7 +37,7 @@ export default function PublicNav() {
   }, [open])
 
   return (
-    <header className={cn('fixed inset-x-0 top-0 z-40 transition-colors duration-300', scrolled ? 'border-b border-line bg-canvas/90 backdrop-blur-md' : 'border-b border-transparent')}>
+    <header className={cn('fixed inset-x-0 top-0 z-40 border-b bg-paper transition-shadow duration-300', scrolled ? 'border-line shadow-soft' : 'border-line/70')}>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-ink focus:px-3 focus:py-2 focus:text-paper">Skip to content</a>
       <nav aria-label="Primary" className="container flex h-16 items-center gap-6">
         <Link to="/" aria-label="MedoShield AI home" className="shrink-0"><Logo /></Link>

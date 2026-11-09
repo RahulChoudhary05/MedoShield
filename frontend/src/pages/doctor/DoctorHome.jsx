@@ -314,8 +314,8 @@ function NewDoctorWelcome() {
     <Card className="px-6 py-10 sm:px-10 sm:py-12">
       <div className="max-w-2xl">
         <p className="kicker">Your clinic is ready</p>
-        <h2 className="mt-2 font-serif text-[2rem] font-normal leading-tight sm:text-[2.5rem]">
-          Your first patients will <span className="italic text-teal-700">appear here</span>
+        <h2 className="mt-2 font-serif text-[2rem] font-semibold leading-tight sm:text-[2.5rem]">
+          Your first patients will <span className="text-teal-600">appear here</span>
         </h2>
         <p className="mt-3 text-base leading-relaxed text-ink-2">
           MedoShield never lets a doctor add patients on their own. Patients choose you, and the care link starts the moment you accept their request.

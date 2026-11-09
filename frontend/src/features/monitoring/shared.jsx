@@ -268,12 +268,12 @@ export function ConfidenceMeter({ value = 0, label = 'AI confidence' }) {
 }
 
 /** Tiny SVG sparkline (flat, hairline, ember end-dot). */
-export function Sparkline({ values = [], color = '#234A38', width = 120, height = 36, className }) {
+export function Sparkline({ values = [], color = '#1D3AA6', width = 120, height = 36, className }) {
   const pts = values.filter((v) => v != null && !isNaN(v)).map(Number)
   if (pts.length < 2) {
     return (
       <svg width={width} height={height} className={className} aria-hidden>
-        <line x1="0" x2={width} y1={height / 2} y2={height / 2} stroke="#E3DCCF" strokeDasharray="3 5" strokeWidth="1.5" />
+        <line x1="0" x2={width} y1={height / 2} y2={height / 2} stroke="#DFE4EC" strokeDasharray="3 5" strokeWidth="1.5" />
       </svg>
     )
   }
@@ -288,7 +288,7 @@ export function Sparkline({ values = [], color = '#234A38', width = 120, height 
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={cn('overflow-visible', className)} aria-hidden>
       <motion.path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.2, 0.8, 0.2, 1] }} />
-      <circle cx={last[0]} cy={last[1]} r="2.5" fill="#B95A31" />
+      <circle cx={last[0]} cy={last[1]} r="2.5" fill="#D9522A" />
     </svg>
   )
 }
